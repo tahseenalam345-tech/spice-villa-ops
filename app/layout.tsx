@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 export const metadata: Metadata = {
   title: 'Spice Villa — Restaurant Operations',
   description: 'QR ordering, kitchen display and manager dashboard for Spice Villa, Karachi.',
+  themeColor: '#16130E',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
