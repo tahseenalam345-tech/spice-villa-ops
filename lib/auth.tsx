@@ -70,35 +70,49 @@ export function useSession(): { user: StaffUser | null; loading: boolean } {
 
 export function roleHome(role: StaffRole): string {
   switch (role) {
+    case 'owner':
+      return '/owner';
     case 'kitchen':
       return '/kitchen';
     case 'waiter':
       return '/waiter';
     case 'manager':
-    case 'owner':
     default:
       return '/manager';
   }
 }
 
-/** Route guard — renders children only for the allowed roles, else /login. */
+/** Route guard — renders children only for the allowed roles, else /login.
+ *  `?preview=1` bypasses the redirect so /owner can embed live role previews
+ *  in same-origin iframes (demo data only — no real auth involved). */
 export function RequireRole({ roles, children }: { roles: StaffRole[]; children: React.ReactNode }) {
   const { user, loading } = useSession();
   const router = useRouter();
+  const [preview, setPreview] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!user || !roles.includes(user.role))) {
+    try {
+      setPreview(new URLSearchParams(window.location.search).get('preview') === '1');
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !preview && (!user || !roles.includes(user.role))) {
       router.replace('/login');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, loading]);
+  }, [user, loading, preview]);
+
+  if (preview) return <>{children}</>;
 
   if (loading || !user || !roles.includes(user.role)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-pine-deep">
+      <div className="flex min-h-screen items-center justify-center bg-page">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-saffron/30 border-t-saffron" />
-          <p className="text-sm text-cream/60">Loading…</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
+          <p className="text-sm text-muted">Loading…</p>
         </div>
       </div>
     );

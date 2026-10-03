@@ -1,12 +1,9 @@
 # OrderKar — Restaurant chalana ab aasaan
 
-**OrderKar** is restaurant operations software for dine-in restaurants:
-**QR customer ordering**, **waiter app**, **live kitchen display**, and
-**manager dashboard** — one system, zero paperwork.
-
-The landing page sells the product to restaurant owners. The live demo runs on
-sample data for **Spice Villa**, a Kharian-style Pakistani restaurant
-(41-dish menu, 6 tables).
+A complete dine-in restaurant operations system: **QR customer ordering**,
+**waiter app**, **live kitchen display**, **manager dashboard**, and an
+**owner/superadmin analytics suite** — built as a sellable product for
+restaurant owners. Demo data models "Spice Villa", Kharian.
 
 **Stack:** Next.js 14 (App Router) · TypeScript · Tailwind CSS v3 · no backend.
 
@@ -31,94 +28,97 @@ npm run lint
 | Screen | URL | Login |
 |---|---|---|
 | Product landing | `/` | — |
+| Owner dashboard | `/owner` | owner@orderkar.pk |
 | Customer menu (QR demo) | `/table/1` … `/table/6` | none needed — open on your phone to simulate a guest scan |
+| Feedback (reviews QR) | `/feedback` | none needed |
 | Waiter app | `/waiter` | waiter@orderkar.pk |
 | Kitchen display | `/kitchen` | kitchen@orderkar.pk |
 | Manager dashboard | `/manager` | manager@orderkar.pk |
 
 **Demo logins** (password for all: `demo123`):
 
-| Role | Name | Email |
-|---|---|---|
-| Manager | Ali Raza | manager@orderkar.pk |
-| Kitchen | Bilal Ahmed | kitchen@orderkar.pk |
-| Waiter | Usman Tariq | waiter@orderkar.pk |
+| Role | Name | Email | Lands on |
+|---|---|---|---|
+| Owner | Tahseen Alam | owner@orderkar.pk | `/owner` |
+| Manager | Ali Raza | manager@orderkar.pk | `/manager` |
+| Kitchen | Bilal Ahmed | kitchen@orderkar.pk | `/kitchen` |
+| Waiter | Usman Tariq | waiter@orderkar.pk | `/waiter` |
+| Waiter | Danish Ali | danish@orderkar.pk | `/waiter` |
 
 Suggested demo flow:
 
-1. Open `/table/1` on your phone, add items, place an order — watch the live status tracker.
-2. Open `/kitchen` on a second screen — the order arrives with a sound + flash; tap **Start preparing** → **Mark ready**.
-3. Watch the phone tracker update in real time (open both in two tabs — cross-tab sync works).
-4. Log in as manager at `/manager` — live orders, table map, revenue stats, waste log, reviews.
-
-## How data works (no backend)
-
-The app runs fully on **bundled demo data + browser localStorage** — the same
-pattern as our TazaMart/Clinic builds:
-
-- `lib/db.ts` — TypeScript types, seed data (Spice Villa, 6 tables, 8 menu
-  categories, 41 menu items, 3 staff users, demo orders/reviews/waste), and all
-  read/write helpers.
-- Storage key: `orderkar_db_v1` (versioned — bump the version to reseed).
-- Every mutation writes through to localStorage and bumps a revision counter.
-- **Cross-tab realtime:** mutations fire a `storage` event (other tabs) plus an
-  `orderkar-db-update` CustomEvent (same tab). `subscribe(cb)` listens to
-  both; `useLiveDb()` subscribes and also polls every 5s so the kitchen/manager
-  screens stay fresh.
-- `lib/auth.tsx` — demo login against seeded staff users; session in
-  localStorage (`orderkar_session`); `<RequireRole>` route guards.
-
-Seeded orders are timestamped relative to "now", so the kitchen queue,
-dashboard stats, and hourly chart always have live data on first open.
+1. Sign in as **owner** — explore 12 months of analytics: revenue trends, rush-hour heatmap, top items, staff leaderboard.
+2. Scroll to **Live views** — watch customer, waiter, kitchen and manager screens update in real time, side by side.
+3. Open `/table/1` on your phone, place an order — watch it land on `/kitchen` and in the owner live views.
+4. Print the **QR codes** (owner/manager dashboards) and stick them on tables — each scans to its own table menu.
 
 ## Design system
 
-- **Palette:** deep emerald pine `#0B3D2E` · saffron `#F2A413` · warm cream
-  `#FAF6EE` · chili red `#C93A2E`. Staff screens (`/waiter`, `/kitchen`,
-  `/manager`, `/login`) are dark pine with cream text; customer-facing pages
-  (`/`, `/table/[id]`) are light cream.
-- **Type:** Bricolage Grotesque (display) + Inter (body).
-- **Brand mark:** `components/BrandMark.tsx` — saffron "O" ring with a QR-style
-  finder dot on pine.
+KoDriftDev-inspired, light-first: silver `#ECEEF2` canvas, ink `#0F172A` type,
+blue `#006EF5` brand accent, neo-brutalist buttons (hard offset shadows),
+hairline cards, **Manrope** display + **DM Sans** body. A light/dark toggle in
+every header persists to `orderkar_theme` in localStorage; theming runs through
+CSS variables (`:root` / `[data-theme="dark"]`).
 
-## Wiring Supabase later (optional)
+## How data works (no backend)
 
-`supabase/schema.sql` (tables + FKs + indexes) and `supabase/seed.sql`
-(matching seed data) are ready to run in the Supabase SQL editor.
+The app runs fully on **bundled demo data + browser localStorage**:
 
-To switch the app to Supabase you would:
+- `lib/db.ts` — types, seed, and all read/write helpers.
+  - **Seed:** 12 months of realistic order history (weekly seasonality, lunch/dinner peaks, bestseller-weighted mix). Full order objects for the last 45 days + compact `DailySummary` rows for days 46–365 keep localStorage under ~2 MB.
+  - Storage key: `orderkar_db_v2` (versioned — bump to reseed).
+- `lib/analytics.ts` — range aggregations (today → 12 months) with previous-period deltas.
+- `lib/qr.ts` — `SITE_URL` + per-table / reviews QR definitions.
+- `lib/auth.ts` — demo login against seeded staff users; session in localStorage (`orderkar_session`); `<RequireRole>` route guards (`?preview=1` bypasses for the owner's embedded live previews).
+- Cross-tab realtime: mutations fire a `storage` event (other tabs) plus an `orderkar-db-update` CustomEvent (same tab).
 
-1. Create the project, run `schema.sql`, then `seed.sql`.
-2. Add env vars (ask before changing env in any deployed project):
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. Replace the `lib/db.ts` storage functions with Supabase queries + Realtime
-   subscriptions, keeping the same exported helper signatures so pages don't
-   change. Use Supabase Auth for `lib/auth.tsx` (keep `users` as profile/role data).
+## QR codes
+
+Per-table QRs (`/table/1` … `/table/6`) + a reviews QR (`/feedback`):
+
+- Printable PNGs live in `public/qr/` — regenerate with `node scripts/gen-qr.mjs` after changing `SITE_URL`.
+- In-app: owner and manager dashboards show a QR grid with per-code **Download PNG** and **Print all**.
 
 ## Project structure
 
 ```
 app/
-  page.tsx            OrderKar product landing page
-  login/page.tsx      Staff login
-  table/[id]/page.tsx Customer QR menu + live order tracker (Spice Villa demo)
+  page.tsx            Product landing page
+  login/page.tsx      Staff login (role quick-fill)
+  owner/page.tsx      Owner/superadmin analytics dashboard
+  feedback/page.tsx   Standalone review page (reviews QR target)
+  table/[id]/page.tsx Customer QR menu + live order tracker
   waiter/page.tsx     Waiter app (table grid, ordering, close-out)
   kitchen/page.tsx    Kitchen display (live queue, timers, alerts)
-  manager/page.tsx    Manager dashboard (stats, orders, tables, waste, reviews)
+  manager/page.tsx    Manager dashboard (orders, tables, waste, reviews, QR)
 components/
-  BrandMark.tsx       OrderKar logo mark (inline SVG)
-  DishImage.tsx       Food photo with solid-tile fallback
-  MenuOrder.tsx       Shared menu + cart + checkout drawer (light/dark themes)
+  ui.tsx              Shared kit: Btn, Card, Pill, Kpi, Tabs, inputs, AppHeader, ThemeToggle…
+  charts.tsx          Hand-rolled SVG charts (area, heatmap, bars, donut)
+  QrSection.tsx       QR grid + download/print
+  BrandMark.tsx       OrderKar "O" mark
+  DishImage.tsx       Food photo with fallback tile
+  MenuOrder.tsx       Shared menu + cart + checkout drawer
   OrderTracker.tsx    Live order status steps + review form
-  StatusPill.tsx      Order status badge (light/dark tones)
-  StatCard.tsx        Dashboard stat card
-  TopBar.tsx          Staff page header with logout
+  StatusPill.tsx      Order status badge
 lib/
   db.ts               Data layer (seed + localStorage + realtime)
-  auth.tsx            Demo auth + RequireRole guard
+  analytics.ts        Range aggregations for /owner
+  qr.ts               QR URL definitions
+  auth.ts             Demo auth + RequireRole guard
   format.ts           PKR / time formatting
+scripts/
+  gen-qr.mjs          Generates public/qr/*.png
 supabase/
-  schema.sql          PostgreSQL schema for future backend
+  schema.sql          PostgreSQL schema for a future backend
   seed.sql            Matching seed data
+public/qr/            Printable QR PNGs (table-1…6, reviews)
 ```
+
+## Deploying to Vercel
+
+```bash
+npm run build   # must pass
+```
+
+Then import the repo at [vercel.com/new](https://vercel.com/new) — no env vars
+needed for the demo build. Each push triggers a deploy.

@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { login, roleHome } from '@/lib/auth';
 import BrandMark from '@/components/BrandMark';
+import { Btn, Card, Input, ThemeToggle } from '@/components/ui';
 
 const QUICK = [
+  { label: 'Owner', email: 'owner@orderkar.pk' },
   { label: 'Manager', email: 'manager@orderkar.pk' },
   { label: 'Kitchen', email: 'kitchen@orderkar.pk' },
   { label: 'Waiter', email: 'waiter@orderkar.pk' },
@@ -39,68 +41,72 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-pine-deep px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <BrandMark size={48} />
-            <span className="text-left">
-              <span className="block font-display text-2xl font-bold leading-none text-cream">OrderKar</span>
-              <span className="mt-1 block text-xs font-medium text-cream/55">Restaurant chalana ab aasaan</span>
-            </span>
+    <div className="min-h-screen bg-page">
+      <header className="border-b border-line">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:px-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <BrandMark size={32} />
+            <span className="font-display text-[16px] font-extrabold tracking-tight text-ink">OrderKar</span>
           </Link>
-          <p className="mt-4 text-sm font-medium uppercase tracking-widest text-cream/45">Staff sign in</p>
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <main className="mx-auto flex max-w-md flex-col px-4 py-10 sm:px-6">
+        <div className="mb-6 text-center">
+          <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-muted">Staff sign in</p>
+          <h1 className="mt-2 font-display text-[26px] font-extrabold tracking-tight text-ink">
+            Welcome back
+          </h1>
+          <p className="mt-1 text-sm text-muted">Sign in to your station to start the shift.</p>
         </div>
 
-        <form
-          onSubmit={submit}
-          className="rounded-3xl border border-pine-line/40 bg-pine-card p-6 shadow-card sm:p-8"
-        >
-          <label className="mb-1.5 block text-sm font-medium text-cream/70">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@orderkar.pk"
-            autoComplete="username"
-            className="mb-4 w-full rounded-xl border border-cream/10 bg-white/[0.05] px-4 py-3 text-cream placeholder:text-cream/30 focus:border-saffron/60 focus:outline-none"
-          />
-          <label className="mb-1.5 block text-sm font-medium text-cream/70">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            autoComplete="current-password"
-            className="w-full rounded-xl border border-cream/10 bg-white/[0.05] px-4 py-3 text-cream placeholder:text-cream/30 focus:border-saffron/60 focus:outline-none"
-          />
+        <Card className="p-6 sm:p-7">
+          <form onSubmit={submit} className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-[13px] font-semibold text-body">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@orderkar.pk"
+                autoComplete="username"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[13px] font-semibold text-body">Password</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            </div>
 
-          {error && (
-            <p className="mt-4 rounded-xl bg-chili/10 px-4 py-3 text-sm text-[#F0A49C]">{error}</p>
-          )}
+            {error && (
+              <p className="rounded-[12px] bg-danger/10 px-4 py-3 text-sm font-medium text-danger">{error}</p>
+            )}
 
-          <button
-            type="submit"
-            disabled={busy || !email || !password}
-            className="mt-6 w-full rounded-2xl bg-saffron py-3.5 font-bold text-pine-deep transition hover:bg-saffron-deep disabled:opacity-40"
-          >
-            {busy ? 'Signing in…' : 'Sign in'}
-          </button>
+            <Btn type="submit" size="lg" className="w-full" disabled={busy || !email || !password}>
+              {busy ? 'Signing in…' : 'Sign in'}
+            </Btn>
+          </form>
 
-          <div className="mt-6 border-t border-pine-line/40 pt-5">
-            <p className="mb-3 text-center text-xs uppercase tracking-widest text-cream/40">
+          <div className="mt-6 border-t border-line pt-5">
+            <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
               Demo accounts · password demo123
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {QUICK.map((q) => (
                 <button
                   key={q.email}
                   type="button"
                   onClick={() => quickFill(q.email)}
-                  className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+                  className={`rounded-[12px] border-2 px-3 py-2.5 text-[13px] font-bold transition-all ${
                     email === q.email
-                      ? 'border-saffron bg-saffron/15 text-saffron'
-                      : 'border-cream/10 text-cream/70 hover:border-saffron/50'
+                      ? 'border-ink bg-ink text-white shadow-[0_3px_0_var(--c-hard)]'
+                      : 'border-line bg-surface text-muted hover:border-ink/40 hover:text-ink'
                   }`}
                 >
                   {q.label}
@@ -108,12 +114,12 @@ export default function LoginPage() {
               ))}
             </div>
           </div>
-        </form>
+        </Card>
 
-        <p className="mt-6 text-center text-sm text-cream/40">
-          <Link href="/" className="text-saffron hover:underline">← Back to home</Link>
+        <p className="mt-6 text-center text-sm text-muted">
+          <Link href="/" className="font-semibold text-brand hover:underline">← Back to home</Link>
         </p>
-      </div>
+      </main>
     </div>
   );
 }

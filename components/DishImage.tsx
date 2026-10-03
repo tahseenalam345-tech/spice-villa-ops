@@ -20,11 +20,11 @@ export default function DishImage({
   if (!src || failed) {
     return (
       <div
-        className={`flex items-center justify-center bg-pine-soft ${className}`}
+        className={`flex items-center justify-center bg-soft ${className}`}
         role="img"
         aria-label={alt}
       >
-        <span className="font-display text-4xl font-semibold text-saffron/70">
+        <span className="font-display text-4xl font-extrabold text-brand/50">
           {alt.charAt(0).toUpperCase()}
         </span>
       </div>

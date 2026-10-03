@@ -11,7 +11,7 @@ import {
   type OrderStatus,
 } from '@/lib/db';
 import { fmtElapsed } from '@/lib/format';
-import TopBar from '@/components/TopBar';
+import { AppHeader, Btn, Empty, Pill } from '@/components/ui';
 import StatusPill from '@/components/StatusPill';
 
 type Filter = 'all' | OrderStatus;
@@ -65,69 +65,63 @@ function OrderCard({ order, tableNo, flash }: { order: Order; tableNo?: number; 
 
   return (
     <article
-      className={`rounded-3xl border bg-pine-card p-6 shadow-card ${
-        flash ? 'animate-flash-new border-saffron' : 'border-pine-line/40'
+      className={`rounded-card border-2 bg-surface p-5 shadow-card sm:p-6 ${
+        flash ? 'animate-flash-new !border-brand' : 'border-line'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-display text-4xl font-bold text-cream">#{order.order_number}</p>
-          <p className="mt-1 text-xl font-semibold text-saffron">
+          <p className="font-display text-[34px] font-extrabold leading-none tracking-tight text-ink">
+            #{order.order_number}
+          </p>
+          <p className="mt-1.5 text-[17px] font-extrabold text-brand">
             {tableNo ? `Table ${tableNo}` : 'Takeaway'}
           </p>
         </div>
         <div className="text-right">
           <StatusPill status={order.status} size="lg" />
-          <p className={`mt-2 font-mono text-2xl font-bold ${late ? 'animate-pulse text-chili' : 'text-cream/80'}`}>
+          <p className={`mt-2 font-mono text-[22px] font-extrabold ${late ? 'animate-pulse text-danger' : 'text-ink'}`}>
             {fmtElapsed(elapsedMs)}
           </p>
-          {late && <p className="text-xs font-bold uppercase tracking-wider text-chili">Running late</p>}
+          {late && <p className="text-[10.5px] font-extrabold uppercase tracking-wider text-danger">Running late</p>}
         </div>
       </div>
 
       {order.notes && (
-        <p className="mt-3 rounded-xl bg-saffron/10 px-4 py-2.5 text-sm font-medium text-saffron">
+        <p className="mt-3 rounded-[12px] bg-warn/10 px-4 py-2.5 text-[13px] font-semibold text-warn">
           Note: {order.notes}
         </p>
       )}
 
-      <ul className="mt-4 space-y-2.5 border-t border-pine-line/40 pt-4">
+      <ul className="mt-4 space-y-2.5 border-t border-line pt-4">
         {order.items.map((it) => (
           <li key={it.id} className="flex items-start justify-between gap-3">
-            <span className="text-lg leading-snug text-cream">
-              <span className="mr-2 inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-saffron px-2 font-display text-lg font-bold text-pine-deep">
+            <span className="text-[15px] leading-snug text-body">
+              <span className="mr-2 inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] border-2 border-ink bg-brand px-2 font-display text-[15px] font-extrabold text-white">
                 {it.quantity}
               </span>
-              {it.item_name}
-              {it.notes && <span className="block pl-10 text-sm text-cream/50">↳ {it.notes}</span>}
+              <span className="font-semibold text-ink">{it.item_name}</span>
+              {it.notes && <span className="block pl-10 text-[13px] text-muted">↳ {it.notes}</span>}
             </span>
           </li>
         ))}
       </ul>
 
-      {order.customer_name && (
-        <p className="mt-3 text-sm text-cream/45">Guest: {order.customer_name}</p>
-      )}
+      {order.customer_name && <p className="mt-3 text-[13px] text-muted">Guest: {order.customer_name}</p>}
 
-      <div className="mt-5 flex gap-3">
+      <div className="mt-5">
         {order.status === 'pending' && (
-          <button
-            onClick={() => updateOrderStatus(order.id, 'preparing')}
-            className="flex-1 rounded-2xl bg-saffron py-4 text-lg font-bold text-pine-deep transition hover:bg-saffron-deep"
-          >
+          <Btn onClick={() => updateOrderStatus(order.id, 'preparing')} className="w-full" size="lg">
             Start preparing
-          </button>
+          </Btn>
         )}
         {order.status === 'preparing' && (
-          <button
-            onClick={() => updateOrderStatus(order.id, 'ready')}
-            className="flex-1 rounded-2xl bg-leaf py-4 text-lg font-bold text-pine-deep transition hover:bg-[#46b57c]"
-          >
+          <Btn variant="dark" onClick={() => updateOrderStatus(order.id, 'ready')} className="w-full" size="lg">
             Mark ready
-          </button>
+          </Btn>
         )}
         {order.status === 'ready' && (
-          <p className="flex-1 rounded-2xl border border-leaf/50 bg-leaf/10 py-4 text-center text-lg font-bold text-[#8FDCB2]">
+          <p className="rounded-btn border-2 border-ok/40 bg-ok/10 py-4 text-center font-display text-[16px] font-extrabold text-ok">
             Waiting for pickup
           </p>
         )}
@@ -169,20 +163,20 @@ function KitchenApp() {
   const now = useClock();
 
   return (
-    <div className="min-h-screen bg-pine-deep text-cream">
-      <TopBar title="Kitchen Display" subtitle="Live order queue" />
+    <div className="min-h-screen bg-page">
+      <AppHeader title="Kitchen Display" subtitle="Live order queue" active="/kitchen" />
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {FILTERS.map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`rounded-2xl px-5 py-3 text-base font-bold transition ${
+                className={`rounded-[12px] border-2 px-4 py-2.5 text-sm font-extrabold transition-all ${
                   filter === f.key
-                    ? 'bg-saffron text-pine-deep'
-                    : 'border border-cream/15 text-cream/70 hover:border-cream/30'
+                    ? 'border-ink bg-ink text-white shadow-[0_3px_0_var(--c-hard)]'
+                    : 'border-line bg-surface text-muted hover:border-ink/40 hover:text-ink'
                 }`}
               >
                 {f.label}
@@ -190,25 +184,22 @@ function KitchenApp() {
               </button>
             ))}
           </div>
-          <p className="font-mono text-2xl font-bold text-cream/80">
-            {now.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
-          </p>
+          <div className="flex items-center gap-2">
+            <Pill tone="ok"><span className="h-1.5 w-1.5 rounded-full bg-ok animate-pulse-dot" /> Live</Pill>
+            <p className="font-mono text-xl font-extrabold text-ink">
+              {now.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+            </p>
+          </div>
         </div>
 
         {visible.length === 0 ? (
-          <div className="mt-10 rounded-3xl border border-dashed border-cream/15 p-16 text-center">
-            <p className="font-display text-3xl text-cream/60">All clear</p>
-            <p className="mt-2 text-cream/40">New orders will appear here automatically.</p>
+          <div className="mt-10">
+            <Empty title="All clear" sub="New orders will appear here automatically." />
           </div>
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {visible.map((o) => (
-              <OrderCard
-                key={o.id}
-                order={o}
-                tableNo={tableNumber(db, o.table_id)}
-                flash={flashIds.has(o.id)}
-              />
+              <OrderCard key={o.id} order={o} tableNo={tableNumber(db, o.table_id)} flash={flashIds.has(o.id)} />
             ))}
           </div>
         )}
@@ -219,7 +210,7 @@ function KitchenApp() {
 
 export default function KitchenPage() {
   return (
-    <RequireRole roles={['kitchen', 'manager']}>
+    <RequireRole roles={['kitchen', 'manager', 'owner']}>
       <KitchenApp />
     </RequireRole>
   );

@@ -2,46 +2,94 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------------
+   OrderKar theme tokens. Light is default; [data-theme="dark"] flips.
+   Persisted in localStorage as `orderkar_theme` (see ThemeToggle).
+------------------------------------------------------------------ */
+:root {
+  --c-page: #eceef2;
+  --c-soft: #f4f6f9;
+  --c-surface: #ffffff;
+  --c-ink: #0f172a;
+  --c-body: #1e293b;
+  --c-muted: #64748b;
+  --c-line: rgba(15, 23, 42, 0.11);
+  --c-brand: #006ef5;
+  --c-brand-deep: #003fc5;
+  --c-coral: #de6a50;
+  --c-ok: #16a34a;
+  --c-warn: #d97706;
+  --c-danger: #dc2626;
+  --c-hard: #020617;
+  --shadow-card: 0 14px 40px rgba(16, 40, 39, 0.09);
+  --shadow-lift: 0 20px 55px rgba(16, 40, 39, 0.14);
+  --shadow-btn: 0 3px 0 var(--c-hard);
+  --shadow-btn-hover: 0 4px 0 var(--c-hard);
+  --shadow-btn-active: 0 1px 0 var(--c-hard);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --c-page: #0b1220;
+  --c-soft: #0f1930;
+  --c-surface: #152036;
+  --c-ink: #f1f5f9;
+  --c-body: #cbd5e1;
+  --c-muted: #8a97ad;
+  --c-line: rgba(148, 163, 184, 0.18);
+  --c-brand: #4d94ff;
+  --c-brand-deep: #006ef5;
+  --c-coral: #e8846a;
+  --c-ok: #34d399;
+  --c-warn: #fbbf24;
+  --c-danger: #f87171;
+  --c-hard: #000000;
+  --shadow-card: 0 14px 40px rgba(0, 0, 0, 0.42);
+  --shadow-lift: 0 20px 55px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-cream text-ink antialiased;
+  @apply bg-page font-sans text-body antialiased;
+  font-feature-settings: 'ss01', 'cv11';
 }
 
 ::selection {
-  background: #f2a413;
-  color: #0b3d2e;
+  background: #006ef5;
+  color: #fff;
 }
 
-/* Slim scrollbars for tab rails and drawers */
+/* Slim scrollbars */
 *::-webkit-scrollbar {
   height: 6px;
   width: 6px;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(11, 61, 46, 0.25);
+  background: rgba(100, 116, 139, 0.45);
   border-radius: 999px;
 }
 *::-webkit-scrollbar-track {
   background: transparent;
 }
 
+/* New-order flash for kitchen tickets */
 @keyframes flash-new {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(242, 164, 19, 0);
+    box-shadow: 0 0 0 0 rgba(0, 110, 245, 0);
   }
   25%,
   75% {
-    box-shadow: 0 0 0 4px rgba(242, 164, 19, 0.9);
+    box-shadow: 0 0 0 4px rgba(0, 110, 245, 0.55);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(242, 164, 19, 0.4);
+    box-shadow: 0 0 0 8px rgba(0, 110, 245, 0.25);
   }
 }
-
 .animate-flash-new {
   animation: flash-new 1.2s ease-in-out 3;
 }
@@ -55,7 +103,42 @@ body {
     transform: translateY(-10px);
   }
 }
-
 .animate-float-soft {
   animation: float-soft 6s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+/* Thin chart gridlines */
+.chart-grid {
+  stroke: var(--c-line);
+  stroke-width: 1;
+}
+
+/* Print: only QR sheet */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #qr-print-sheet,
+  #qr-print-sheet * {
+    visibility: visible;
+  }
+  #qr-print-sheet {
+    position: absolute;
+    inset: 0;
+  }
 }

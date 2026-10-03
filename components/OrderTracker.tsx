@@ -10,6 +10,7 @@ import {
   type OrderStatus,
 } from '@/lib/db';
 import { fmtTime, pkr } from '@/lib/format';
+import { Btn, Card, Textarea } from './ui';
 import StatusPill from './StatusPill';
 
 const STEPS: { key: OrderStatus; label: string; hint: string }[] = [
@@ -25,11 +26,14 @@ function Stars({ value, onPick }: { value: number; onPick: (n: number) => void }
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
+          type="button"
           onClick={() => onPick(n)}
-          className={`text-3xl transition ${n <= value ? 'text-saffron' : 'text-ink/15 hover:text-ink/30'}`}
+          className="p-0.5 transition-transform hover:scale-110"
           aria-label={`${n} star${n > 1 ? 's' : ''}`}
         >
-          ★
+          <svg width="30" height="30" viewBox="0 0 24 24" fill={n <= value ? '#F2A413' : 'none'} stroke={n <= value ? '#F2A413' : 'var(--c-muted)'} strokeWidth="1.8" strokeLinejoin="round">
+            <path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8z" />
+          </svg>
         </button>
       ))}
     </div>
@@ -45,9 +49,9 @@ export default function OrderTracker({ orderId, onOrderMore }: { orderId: string
 
   if (!order) {
     return (
-      <div className="rounded-2xl border border-ink/10 bg-white p-6 text-center shadow-card">
-        <p className="text-ink-soft">Order not found.</p>
-      </div>
+      <Card className="p-6 text-center">
+        <p className="text-muted">Order not found.</p>
+      </Card>
     );
   }
 
@@ -61,18 +65,18 @@ export default function OrderTracker({ orderId, onOrderMore }: { orderId: string
   };
 
   return (
-    <div className="rounded-3xl border border-ink/10 bg-white p-5 shadow-card sm:p-6">
+    <Card className="p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-ink-faint">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
             Order #{order.order_number}
           </p>
-          <p className="font-display text-xl font-semibold text-ink">
+          <p className="font-display text-xl font-extrabold tracking-tight text-ink">
             {tNo ? `Table ${tNo}` : 'Your order'} · {pkr(order.total_amount)}
           </p>
-          <p className="mt-0.5 text-xs text-ink-faint">Placed at {fmtTime(order.created_at)}</p>
+          <p className="mt-0.5 text-xs text-muted">Placed at {fmtTime(order.created_at)}</p>
         </div>
-        <StatusPill status={order.status} size="lg" tone="light" />
+        <StatusPill status={order.status} size="lg" />
       </div>
 
       {/* Steps */}
@@ -84,25 +88,25 @@ export default function OrderTracker({ orderId, onOrderMore }: { orderId: string
             <div key={step.key} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-bold ${
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-extrabold transition ${
                     done
-                      ? 'border-leaf bg-leaf/15 text-leaf-deep'
+                      ? 'border-ok bg-ok/10 text-ok'
                       : current
-                        ? 'animate-pulse border-saffron bg-saffron/15 text-saffron-deep'
-                        : 'border-ink/15 text-ink-faint'
+                        ? 'animate-pulse border-brand bg-brand/10 text-brand'
+                        : 'border-line text-muted'
                   }`}
                 >
-                  {done ? '✓' : i + 1}
+                  {done ? (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 12.5l5 5 10-11" /></svg>
+                  ) : (
+                    i + 1
+                  )}
                 </div>
-                {i < STEPS.length - 1 && (
-                  <div className={`h-8 w-0.5 ${done ? 'bg-leaf/50' : 'bg-ink/10'}`} />
-                )}
+                {i < STEPS.length - 1 && <div className={`h-7 w-0.5 ${done ? 'bg-ok/40' : 'bg-line'}`} />}
               </div>
-              <div className="pb-6">
-                <p className={`font-medium ${current || done ? 'text-ink' : 'text-ink-faint'}`}>
-                  {step.label}
-                </p>
-                <p className="text-sm text-ink-soft">{step.hint}</p>
+              <div className="pb-5">
+                <p className={`font-bold ${current || done ? 'text-ink' : 'text-muted'}`}>{step.label}</p>
+                <p className="text-[13px] text-muted">{step.hint}</p>
               </div>
             </div>
           );
@@ -110,53 +114,47 @@ export default function OrderTracker({ orderId, onOrderMore }: { orderId: string
       </div>
 
       {/* Items */}
-      <div className="rounded-2xl bg-cream p-4">
+      <div className="rounded-[14px] bg-soft p-4">
         {order.items.map((it) => (
           <div key={it.id} className="flex items-center justify-between py-1.5 text-sm">
-            <span className="text-ink">
-              <span className="font-bold text-pine">{it.quantity}×</span> {it.item_name}
+            <span className="text-body">
+              <span className="font-extrabold text-brand">{it.quantity}×</span> {it.item_name}
             </span>
-            <span className="text-ink-soft">{pkr(it.unit_price * it.quantity)}</span>
+            <span className="font-semibold text-muted">{pkr(it.unit_price * it.quantity)}</span>
           </div>
         ))}
       </div>
 
       {/* Review */}
       {order.status === 'completed' && !existingReview && !reviewDone && (
-        <div className="mt-5 rounded-2xl border border-saffron/40 bg-saffron/10 p-4">
-          <p className="font-medium text-ink">How was your meal?</p>
+        <div className="mt-5 rounded-[14px] border border-line bg-soft p-4">
+          <p className="font-bold text-ink">How was your meal?</p>
           <div className="mt-2">
             <Stars value={rating} onPick={setRating} />
           </div>
-          <textarea
+          <Textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Tell us what you loved (optional)…"
             rows={2}
-            className="mt-3 w-full resize-none rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm text-ink placeholder:text-ink-faint focus:border-pine/50 focus:outline-none"
+            className="mt-3 resize-none"
           />
-          <button
-            onClick={submitReview}
-            className="mt-3 w-full rounded-xl bg-pine py-3 text-sm font-bold text-cream transition hover:bg-pine-soft"
-          >
+          <Btn onClick={submitReview} className="mt-3 w-full" size="sm">
             Submit review
-          </button>
+          </Btn>
         </div>
       )}
       {(existingReview || reviewDone) && order.status === 'completed' && (
-        <p className="mt-5 rounded-2xl bg-leaf/10 p-4 text-center text-sm font-medium text-leaf-deep">
+        <p className="mt-5 rounded-[14px] bg-ok/10 p-4 text-center text-sm font-semibold text-ok">
           Shukriya! Your feedback helps us serve you better.
         </p>
       )}
 
       {onOrderMore && order.status !== 'completed' && (
-        <button
-          onClick={onOrderMore}
-          className="mt-5 w-full rounded-xl border border-ink/15 py-3 text-sm font-medium text-ink transition hover:border-pine/50 hover:text-pine"
-        >
+        <Btn variant="secondary" onClick={onOrderMore} className="mt-5 w-full" size="sm">
           Order more items
-        </button>
+        </Btn>
       )}
-    </div>
+    </Card>
   );
 }
