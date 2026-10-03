@@ -2,13 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-[#16130E] text-[#FAF6EE] antialiased;
+  @apply bg-cream text-ink antialiased;
 }
 
 ::selection {
-  background: #e9a13b;
-  color: #16130e;
+  background: #f2a413;
+  color: #0b3d2e;
 }
 
 /* Slim scrollbars for tab rails and drawers */
@@ -17,7 +21,7 @@ body {
   width: 6px;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(233, 161, 59, 0.35);
+  background: rgba(11, 61, 46, 0.25);
   border-radius: 999px;
 }
 *::-webkit-scrollbar-track {
@@ -27,17 +31,31 @@ body {
 @keyframes flash-new {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(233, 161, 59, 0);
+    box-shadow: 0 0 0 0 rgba(242, 164, 19, 0);
   }
   25%,
   75% {
-    box-shadow: 0 0 0 4px rgba(233, 161, 59, 0.9);
+    box-shadow: 0 0 0 4px rgba(242, 164, 19, 0.9);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(233, 161, 59, 0.4);
+    box-shadow: 0 0 0 8px rgba(242, 164, 19, 0.4);
   }
 }
 
 .animate-flash-new {
   animation: flash-new 1.2s ease-in-out 3;
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float-soft {
+  animation: float-soft 6s ease-in-out infinite;
 }

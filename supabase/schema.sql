@@ -1,5 +1,5 @@
 -- ============================================================================
--- Spice Villa — Supabase / PostgreSQL schema
+-- OrderKar — Supabase / PostgreSQL schema (demo restaurant: Spice Villa)
 -- Restaurant operations system prototype (QR ordering, kitchen display,
 -- waiter app, manager dashboard).
 --

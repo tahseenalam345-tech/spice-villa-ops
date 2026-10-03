@@ -65,55 +65,55 @@ function OrderCard({ order, tableNo, flash }: { order: Order; tableNo?: number; 
 
   return (
     <article
-      className={`rounded-3xl border bg-[#141110] p-6 ${
-        flash ? 'animate-flash-new border-[#E9A13B]' : 'border-white/10'
+      className={`rounded-3xl border bg-pine-card p-6 shadow-card ${
+        flash ? 'animate-flash-new border-saffron' : 'border-pine-line/40'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-display text-4xl font-bold text-[#FAF6EE]">#{order.order_number}</p>
-          <p className="mt-1 text-xl font-semibold text-[#E9A13B]">
+          <p className="font-display text-4xl font-bold text-cream">#{order.order_number}</p>
+          <p className="mt-1 text-xl font-semibold text-saffron">
             {tableNo ? `Table ${tableNo}` : 'Takeaway'}
           </p>
         </div>
         <div className="text-right">
           <StatusPill status={order.status} size="lg" />
-          <p className={`mt-2 font-mono text-2xl font-bold ${late ? 'animate-pulse text-red-400' : 'text-[#FAF6EE]/80'}`}>
+          <p className={`mt-2 font-mono text-2xl font-bold ${late ? 'animate-pulse text-chili' : 'text-cream/80'}`}>
             {fmtElapsed(elapsedMs)}
           </p>
-          {late && <p className="text-xs font-bold uppercase tracking-wider text-red-400">Running late</p>}
+          {late && <p className="text-xs font-bold uppercase tracking-wider text-chili">Running late</p>}
         </div>
       </div>
 
       {order.notes && (
-        <p className="mt-3 rounded-xl bg-[#E9A13B]/10 px-4 py-2.5 text-sm font-medium text-[#E9A13B]">
+        <p className="mt-3 rounded-xl bg-saffron/10 px-4 py-2.5 text-sm font-medium text-saffron">
           Note: {order.notes}
         </p>
       )}
 
-      <ul className="mt-4 space-y-2.5 border-t border-white/10 pt-4">
+      <ul className="mt-4 space-y-2.5 border-t border-pine-line/40 pt-4">
         {order.items.map((it) => (
           <li key={it.id} className="flex items-start justify-between gap-3">
-            <span className="text-lg leading-snug text-[#FAF6EE]">
-              <span className="mr-2 inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-[#E9A13B] px-2 font-display text-lg font-bold text-[#16130E]">
+            <span className="text-lg leading-snug text-cream">
+              <span className="mr-2 inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-saffron px-2 font-display text-lg font-bold text-pine-deep">
                 {it.quantity}
               </span>
               {it.item_name}
-              {it.notes && <span className="block pl-10 text-sm text-[#FAF6EE]/50">↳ {it.notes}</span>}
+              {it.notes && <span className="block pl-10 text-sm text-cream/50">↳ {it.notes}</span>}
             </span>
           </li>
         ))}
       </ul>
 
       {order.customer_name && (
-        <p className="mt-3 text-sm text-[#FAF6EE]/45">Guest: {order.customer_name}</p>
+        <p className="mt-3 text-sm text-cream/45">Guest: {order.customer_name}</p>
       )}
 
       <div className="mt-5 flex gap-3">
         {order.status === 'pending' && (
           <button
             onClick={() => updateOrderStatus(order.id, 'preparing')}
-            className="flex-1 rounded-2xl bg-[#E9A13B] py-4 text-lg font-bold text-[#16130E] transition hover:bg-[#f2b45c]"
+            className="flex-1 rounded-2xl bg-saffron py-4 text-lg font-bold text-pine-deep transition hover:bg-saffron-deep"
           >
             Start preparing
           </button>
@@ -121,13 +121,13 @@ function OrderCard({ order, tableNo, flash }: { order: Order; tableNo?: number; 
         {order.status === 'preparing' && (
           <button
             onClick={() => updateOrderStatus(order.id, 'ready')}
-            className="flex-1 rounded-2xl bg-[#4ADE80] py-4 text-lg font-bold text-[#0c1410] transition hover:bg-[#6ff097]"
+            className="flex-1 rounded-2xl bg-leaf py-4 text-lg font-bold text-pine-deep transition hover:bg-[#46b57c]"
           >
             Mark ready
           </button>
         )}
         {order.status === 'ready' && (
-          <p className="flex-1 rounded-2xl border border-[#4ADE80]/40 bg-[#4ADE80]/10 py-4 text-center text-lg font-bold text-[#4ADE80]">
+          <p className="flex-1 rounded-2xl border border-leaf/50 bg-leaf/10 py-4 text-center text-lg font-bold text-[#8FDCB2]">
             Waiting for pickup
           </p>
         )}
@@ -169,7 +169,7 @@ function KitchenApp() {
   const now = useClock();
 
   return (
-    <div className="min-h-screen bg-[#0B0A09] text-[#FAF6EE]">
+    <div className="min-h-screen bg-pine-deep text-cream">
       <TopBar title="Kitchen Display" subtitle="Live order queue" />
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -181,8 +181,8 @@ function KitchenApp() {
                 onClick={() => setFilter(f.key)}
                 className={`rounded-2xl px-5 py-3 text-base font-bold transition ${
                   filter === f.key
-                    ? 'bg-[#E9A13B] text-[#16130E]'
-                    : 'border border-white/15 text-[#FAF6EE]/70 hover:border-white/30'
+                    ? 'bg-saffron text-pine-deep'
+                    : 'border border-cream/15 text-cream/70 hover:border-cream/30'
                 }`}
               >
                 {f.label}
@@ -190,15 +190,15 @@ function KitchenApp() {
               </button>
             ))}
           </div>
-          <p className="font-mono text-2xl font-bold text-[#FAF6EE]/80">
+          <p className="font-mono text-2xl font-bold text-cream/80">
             {now.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
           </p>
         </div>
 
         {visible.length === 0 ? (
-          <div className="mt-10 rounded-3xl border border-dashed border-white/15 p-16 text-center">
-            <p className="font-display text-3xl text-[#FAF6EE]/60">All clear</p>
-            <p className="mt-2 text-[#FAF6EE]/40">New orders will appear here automatically.</p>
+          <div className="mt-10 rounded-3xl border border-dashed border-cream/15 p-16 text-center">
+            <p className="font-display text-3xl text-cream/60">All clear</p>
+            <p className="mt-2 text-cream/40">New orders will appear here automatically.</p>
           </div>
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">

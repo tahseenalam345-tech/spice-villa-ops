@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 /**
  * Food photo with graceful degradation: if the URL is missing or fails to
- * load, renders a styled gradient tile with the dish initial instead.
+ * load, renders a solid pine tile with the dish initial in saffron.
  */
 export default function DishImage({
   src,
@@ -20,11 +20,11 @@ export default function DishImage({
   if (!src || failed) {
     return (
       <div
-        className={`flex items-center justify-center bg-gradient-to-br from-[#3a2b12] via-[#6b4a1a] to-[#a06a24] ${className}`}
+        className={`flex items-center justify-center bg-pine-soft ${className}`}
         role="img"
         aria-label={alt}
       >
-        <span className="font-display text-4xl font-semibold text-[#E9A13B]/70">
+        <span className="font-display text-4xl font-semibold text-saffron/70">
           {alt.charAt(0).toUpperCase()}
         </span>
       </div>

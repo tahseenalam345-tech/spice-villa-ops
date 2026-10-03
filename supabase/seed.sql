@@ -1,5 +1,5 @@
 -- ============================================================================
--- Spice Villa — seed data (mirrors the bundled demo data in lib/db.ts)
+-- OrderKar — seed data (demo restaurant: Spice Villa; mirrors the bundled demo data in lib/db.ts)
 -- Run after schema.sql. Timestamps are relative to now() so the manager
 -- dashboard shows "today" stats immediately.
 -- Passwords here are placeholders — use Supabase Auth in production.
@@ -8,18 +8,18 @@
 -- Restaurant -----------------------------------------------------------------
 insert into restaurants (id, name, tagline, cuisine, address, phone)
 values ('rest_spicevilla', 'Spice Villa', 'Desi flavours, served with pride',
-        'Pakistani', 'Main Bahadurabad Road, Karachi', '021-34567890')
+        'Pakistani', 'G.T. Road, Kharian, Punjab', '(053) 761 2345')
 on conflict (id) do nothing;
 
 -- Tables ----------------------------------------------------------------------
 insert into tables (id, restaurant_id, table_number, qr_code, is_active)
 values
-  ('table_1', 'rest_spicevilla', 1, 'SPICEVILLA-T1', true),
-  ('table_2', 'rest_spicevilla', 2, 'SPICEVILLA-T2', true),
-  ('table_3', 'rest_spicevilla', 3, 'SPICEVILLA-T3', true),
-  ('table_4', 'rest_spicevilla', 4, 'SPICEVILLA-T4', true),
-  ('table_5', 'rest_spicevilla', 5, 'SPICEVILLA-T5', true),
-  ('table_6', 'rest_spicevilla', 6, 'SPICEVILLA-T6', true)
+  ('table_1', 'rest_spicevilla', 1, 'ORDERKAR-T1', true),
+  ('table_2', 'rest_spicevilla', 2, 'ORDERKAR-T2', true),
+  ('table_3', 'rest_spicevilla', 3, 'ORDERKAR-T3', true),
+  ('table_4', 'rest_spicevilla', 4, 'ORDERKAR-T4', true),
+  ('table_5', 'rest_spicevilla', 5, 'ORDERKAR-T5', true),
+  ('table_6', 'rest_spicevilla', 6, 'ORDERKAR-T6', true)
 on conflict (id) do nothing;
 
 -- Categories ------------------------------------------------------------------
@@ -83,9 +83,9 @@ on conflict (id) do nothing;
 -- and keep this table for profile/role data only.
 insert into users (id, restaurant_id, email, password_hash, role, name, phone, is_active)
 values
-  ('user_manager', 'rest_spicevilla', 'manager@spicevilla.pk', 'demo-placeholder', 'manager', 'Ali Raza', '0300-1234567', true),
-  ('user_kitchen', 'rest_spicevilla', 'kitchen@spicevilla.pk', 'demo-placeholder', 'kitchen', 'Bilal Ahmed', '0300-2345678', true),
-  ('user_waiter',  'rest_spicevilla', 'waiter@spicevilla.pk',  'demo-placeholder', 'waiter',  'Usman Tariq', '0300-3456789', true)
+  ('user_manager', 'rest_spicevilla', 'manager@orderkar.pk', 'demo-placeholder', 'manager', 'Ali Raza', '0300-1234567', true),
+  ('user_kitchen', 'rest_spicevilla', 'kitchen@orderkar.pk', 'demo-placeholder', 'kitchen', 'Bilal Ahmed', '0300-2345678', true),
+  ('user_waiter',  'rest_spicevilla', 'waiter@orderkar.pk',  'demo-placeholder', 'waiter',  'Usman Tariq', '0300-3456789', true)
 on conflict (id) do nothing;
 
 -- Demo orders for today ---------------------------------------------------------

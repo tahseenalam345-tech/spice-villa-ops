@@ -1,7 +1,7 @@
 'use client';
 
 // ---------------------------------------------------------------------------
-// Spice Villa — demo auth against the seeded staff users in lib/db.ts.
+// OrderKar — demo auth against the seeded staff users in lib/db.ts.
 // Session is a plain localStorage entry. Swap for Supabase Auth later.
 // ---------------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadDB, type StaffRole, type StaffUser } from './db';
 
-export const SESSION_KEY = 'spicevilla_session';
+export const SESSION_KEY = 'orderkar_session';
 
 export interface Session {
   user: StaffUser;
@@ -95,10 +95,10 @@ export function RequireRole({ roles, children }: { roles: StaffRole[]; children:
 
   if (loading || !user || !roles.includes(user.role)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#16130E]">
+      <div className="flex min-h-screen items-center justify-center bg-pine-deep">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#E9A13B]/30 border-t-[#E9A13B]" />
-          <p className="text-sm text-[#FAF6EE]/60">Loading…</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-saffron/30 border-t-saffron" />
+          <p className="text-sm text-cream/60">Loading…</p>
         </div>
       </div>
     );

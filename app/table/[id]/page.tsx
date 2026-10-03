@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { getOrder, tableActiveOrder, useLiveDb } from '@/lib/db';
 import { pkr } from '@/lib/format';
+import BrandMark from '@/components/BrandMark';
 import MenuOrder from '@/components/MenuOrder';
 import OrderTracker from '@/components/OrderTracker';
 import StatusPill from '@/components/StatusPill';
@@ -19,19 +20,19 @@ export default function TablePage({ params }: { params: { id: string } }) {
 
   if (!table) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#16130E] px-4">
-        <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-[#211C14] p-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E9A13B]/15 font-display text-3xl font-bold text-[#E9A13B]">
-            ?
+      <div className="flex min-h-screen items-center justify-center bg-cream px-4">
+        <div className="w-full max-w-sm rounded-3xl border border-ink/10 bg-white p-8 text-center shadow-card">
+          <div className="mx-auto flex justify-center">
+            <BrandMark size={64} />
           </div>
-          <h1 className="mt-4 font-display text-2xl font-semibold text-[#FAF6EE]">Table not found</h1>
-          <p className="mt-2 text-sm text-[#FAF6EE]/55">
+          <h1 className="mt-4 font-display text-2xl font-bold text-ink">Table not found</h1>
+          <p className="mt-2 text-sm text-ink-soft">
             This QR code doesn&apos;t match a table. Please scan the code on your table again,
             or ask a waiter for help.
           </p>
           <Link
             href="/"
-            className="mt-6 inline-block rounded-2xl bg-[#E9A13B] px-6 py-3 font-bold text-[#16130E]"
+            className="mt-6 inline-block rounded-2xl bg-pine px-6 py-3 font-bold text-cream transition hover:bg-pine-soft"
           >
             Back to home
           </Link>
@@ -49,20 +50,23 @@ export default function TablePage({ params }: { params: { id: string } }) {
   const showMenu = !tracked || orderingMore || viewingActive;
 
   return (
-    <div className="min-h-screen bg-[#16130E] text-[#FAF6EE]">
+    <div className="min-h-screen bg-cream text-ink">
       {/* Header */}
-      <header className="border-b border-white/10 bg-[#16130E]">
+      <header className="border-b border-pine/15 bg-pine">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E9A13B] font-display text-xl font-bold text-[#16130E]">
-              S
-            </div>
+            <BrandMark size={44} />
             <div>
-              <h1 className="font-display text-xl font-semibold leading-tight">{db.restaurant.name}</h1>
-              <p className="text-xs text-[#FAF6EE]/50">{db.restaurant.tagline}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-saffron">
+                OrderKar
+              </p>
+              <h1 className="-mt-0.5 font-display text-xl font-bold leading-tight text-cream">
+                {db.restaurant.name}
+              </h1>
+              <p className="text-xs text-cream/60">{db.restaurant.tagline}</p>
             </div>
           </div>
-          <span className="rounded-full border border-[#E9A13B]/50 bg-[#E9A13B]/10 px-4 py-1.5 text-sm font-bold text-[#E9A13B]">
+          <span className="rounded-full bg-saffron px-4 py-1.5 text-sm font-bold text-pine-deep">
             Table {table.table_number}
           </span>
         </div>
@@ -87,17 +91,17 @@ export default function TablePage({ params }: { params: { id: string } }) {
         {!placed && liveActive && !viewingActive && (
           <button
             onClick={() => setViewingActive(true)}
-            className="mt-5 flex w-full items-center justify-between rounded-2xl border border-[#E9A13B]/40 bg-[#E9A13B]/10 px-5 py-4 text-left transition hover:bg-[#E9A13B]/15"
+            className="mt-5 flex w-full items-center justify-between rounded-2xl border border-saffron-deep/40 bg-saffron/15 px-5 py-4 text-left shadow-card transition hover:bg-saffron/25"
           >
             <span>
-              <span className="block text-sm font-bold text-[#E9A13B]">
+              <span className="block text-sm font-bold text-pine">
                 Active order #{liveActive.order_number} on this table
               </span>
-              <span className="block text-xs text-[#FAF6EE]/55">
+              <span className="block text-xs text-ink-soft">
                 {pkr(liveActive.total_amount)} · tap to track it live
               </span>
             </span>
-            <StatusPill status={liveActive.status} />
+            <StatusPill status={liveActive.status} tone="light" />
           </button>
         )}
 
@@ -105,17 +109,17 @@ export default function TablePage({ params }: { params: { id: string } }) {
           <div className="pt-5">
             <div className="flex items-center justify-between pb-1">
               <div>
-                <h2 className="font-display text-2xl font-semibold">
+                <h2 className="font-display text-2xl font-bold">
                   {tracked ? 'Add more items' : 'Menu'}
                 </h2>
-                <p className="mt-1 text-sm text-[#FAF6EE]/55">
+                <p className="mt-1 text-sm text-ink-soft">
                   Order from your phone — the kitchen starts preparing right away.
                 </p>
               </div>
               {viewingActive && !placed && (
                 <button
                   onClick={() => setViewingActive(false)}
-                  className="shrink-0 text-sm text-[#FAF6EE]/60 underline hover:text-[#E9A13B]"
+                  className="shrink-0 text-sm text-ink-soft underline hover:text-pine"
                 >
                   Hide status
                 </button>
@@ -133,11 +137,14 @@ export default function TablePage({ params }: { params: { id: string } }) {
           </div>
         )}
 
-        <footer className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-[#FAF6EE]/35">
+        <footer className="mt-10 border-t border-ink/10 pt-6 text-center text-xs text-ink-faint">
           <p>
             {db.restaurant.address} · {db.restaurant.phone}
           </p>
           <p className="mt-1">Need help? Please call your waiter.</p>
+          <p className="mt-2 flex items-center justify-center gap-1.5">
+            Powered by <span className="font-bold text-pine">OrderKar</span>
+          </p>
         </footer>
       </main>
     </div>

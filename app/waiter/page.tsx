@@ -45,12 +45,12 @@ function WaiterApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[#16130E] text-[#FAF6EE]">
+    <div className="min-h-screen bg-pine-deep text-cream">
       <TopBar title="Waiter" subtitle="Tableside ordering" />
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         {/* Table grid */}
-        <h2 className="font-display text-xl font-semibold">Tables</h2>
+        <h2 className="font-display text-xl font-bold">Tables</h2>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {tables.map((t) => {
             const active = tableActiveOrder(db, t.id);
@@ -64,23 +64,23 @@ function WaiterApp() {
                 }}
                 className={`rounded-2xl border p-4 text-left transition ${
                   isSel
-                    ? 'border-[#E9A13B] bg-[#E9A13B]/10'
-                    : 'border-white/10 bg-[#211C14] hover:border-white/25'
+                    ? 'border-saffron bg-saffron/10'
+                    : 'border-pine-line/40 bg-pine-card hover:border-cream/25'
                 }`}
               >
-                <p className="font-display text-lg font-semibold">Table {t.table_number}</p>
+                <p className="font-display text-lg font-bold">Table {t.table_number}</p>
                 {active ? (
                   <div className="mt-1.5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-[#E9A13B]">
+                    <p className="text-xs font-bold uppercase tracking-wider text-saffron">
                       Occupied
                     </p>
-                    <p className="mt-0.5 text-xs text-[#FAF6EE]/55">
+                    <p className="mt-0.5 text-xs text-cream/55">
                       #{active.order_number} · {fmtAgo(active.created_at)}
                     </p>
-                    <p className="text-xs text-[#FAF6EE]/55">{pkr(active.total_amount)}</p>
+                    <p className="text-xs text-cream/55">{pkr(active.total_amount)}</p>
                   </div>
                 ) : (
-                  <p className="mt-1.5 text-xs font-medium uppercase tracking-wider text-[#4ADE80]">
+                  <p className="mt-1.5 text-xs font-medium uppercase tracking-wider text-[#8FDCB2]">
                     Empty
                   </p>
                 )}
@@ -94,12 +94,12 @@ function WaiterApp() {
           <div className="mt-8 grid gap-6 lg:grid-cols-5">
             <div className="lg:col-span-3">
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl font-semibold">
+                <h2 className="font-display text-xl font-bold">
                   New order · Table {selectedTable.table_number}
                 </h2>
                 <button
                   onClick={() => setSelected(null)}
-                  className="text-sm text-[#FAF6EE]/55 underline hover:text-[#E9A13B]"
+                  className="text-sm text-cream/55 underline hover:text-saffron"
                 >
                   Close
                 </button>
@@ -110,76 +110,77 @@ function WaiterApp() {
                   mode="waiter"
                   waiterId={user?.id}
                   onOrderPlaced={handlePlaced}
+                  dark
                 />
               </div>
             </div>
 
             <div className="lg:col-span-2">
-              <h2 className="font-display text-xl font-semibold">Active order</h2>
+              <h2 className="font-display text-xl font-bold">Active order</h2>
               <div className="mt-3">
                 {activeOrder ? (
-                  <div className="rounded-2xl border border-white/10 bg-[#211C14] p-5">
+                  <div className="rounded-2xl border border-pine-line/40 bg-pine-card p-5 shadow-card">
                     <div className="flex items-center justify-between">
-                      <p className="font-display text-lg font-semibold">
+                      <p className="font-display text-lg font-bold">
                         #{activeOrder.order_number}
                       </p>
                       <StatusPill status={activeOrder.status} />
                     </div>
-                    <p className="mt-1 text-sm text-[#FAF6EE]/55">
+                    <p className="mt-1 text-sm text-cream/55">
                       {activeOrder.customer_name ? `${activeOrder.customer_name} · ` : ''}
                       {fmtTime(activeOrder.created_at)} · {fmtAgo(activeOrder.created_at)}
                     </p>
                     <div className="mt-3 space-y-1.5">
                       {activeOrder.items.map((it) => (
                         <div key={it.id} className="flex justify-between text-sm">
-                          <span className="text-[#FAF6EE]/85">
-                            <span className="font-bold text-[#E9A13B]">{it.quantity}×</span>{' '}
+                          <span className="text-cream/85">
+                            <span className="font-bold text-saffron">{it.quantity}×</span>{' '}
                             {it.item_name}
                           </span>
-                          <span className="text-[#FAF6EE]/60">{pkr(it.unit_price * it.quantity)}</span>
+                          <span className="text-cream/60">{pkr(it.unit_price * it.quantity)}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
-                      <span className="text-sm text-[#FAF6EE]/55">Total</span>
-                      <span className="font-display text-xl font-semibold text-[#E9A13B]">
+                    <div className="mt-3 flex items-center justify-between border-t border-pine-line/40 pt-3">
+                      <span className="text-sm text-cream/55">Total</span>
+                      <span className="font-display text-xl font-bold text-saffron">
                         {pkr(activeOrder.total_amount)}
                       </span>
                     </div>
                     <button
                       onClick={completeOrder}
-                      className="mt-4 w-full rounded-xl bg-[#4ADE80] py-3 text-sm font-bold text-[#0c1410] transition hover:bg-[#6ff097]"
+                      className="mt-4 w-full rounded-xl bg-leaf py-3 text-sm font-bold text-pine-deep transition hover:bg-[#46b57c]"
                     >
                       Mark completed & free table
                     </button>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-[#FAF6EE]/45">
+                  <div className="rounded-2xl border border-dashed border-cream/15 p-6 text-center text-sm text-cream/45">
                     No active order on this table. Place one from the menu.
                   </div>
                 )}
               </div>
 
-              <h2 className="mt-6 font-display text-xl font-semibold">Today&apos;s history</h2>
+              <h2 className="mt-6 font-display text-xl font-bold">Today&apos;s history</h2>
               <div className="mt-3 space-y-2">
                 {history.length === 0 && (
-                  <p className="text-sm text-[#FAF6EE]/45">No orders yet today on this table.</p>
+                  <p className="text-sm text-cream/45">No orders yet today on this table.</p>
                 )}
                 {history.map((o) => (
                   <div
                     key={o.id}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-[#211C14] px-4 py-3"
+                    className="flex items-center justify-between rounded-xl border border-pine-line/40 bg-pine-card px-4 py-3"
                   >
                     <div>
-                      <p className="text-sm font-medium text-[#FAF6EE]">
+                      <p className="text-sm font-medium text-cream">
                         #{o.order_number} · {o.items.reduce((s, i) => s + i.quantity, 0)} items
                       </p>
-                      <p className="text-xs text-[#FAF6EE]/45">
+                      <p className="text-xs text-cream/45">
                         {fmtTime(o.created_at)} · {o.customer_name ?? 'Walk-in'}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-[#E9A13B]">{pkr(o.total_amount)}</span>
+                      <span className="text-sm font-medium text-saffron">{pkr(o.total_amount)}</span>
                       <StatusPill status={o.status} />
                     </div>
                   </div>
@@ -188,9 +189,9 @@ function WaiterApp() {
             </div>
           </div>
         ) : (
-          <div className="mt-8 rounded-2xl border border-dashed border-white/15 p-10 text-center">
-            <p className="font-display text-xl text-[#FAF6EE]/70">Select a table to take an order</p>
-            <p className="mt-1 text-sm text-[#FAF6EE]/45">
+          <div className="mt-8 rounded-2xl border border-dashed border-cream/15 p-10 text-center">
+            <p className="font-display text-xl text-cream/70">Select a table to take an order</p>
+            <p className="mt-1 text-sm text-cream/45">
               Occupied tables show their running order — tap one to add items or close it out.
             </p>
           </div>
