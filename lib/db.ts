@@ -1,14 +1,15 @@
 'use client';
 
 // ---------------------------------------------------------------------------
-// Spice Villa — local-first demo data layer.
+// OrderKar — local-first demo data layer.
 //
+// Demo restaurant: Spice Villa (Kharian-style Pakistani restaurant).
 // Bundled seed data + browser localStorage persistence. Zero backend required.
 // The schema mirrors /supabase/schema.sql so a real Supabase backend can be
 // wired later without changing the UI code.
 //
 // Cross-tab realtime: every mutation writes localStorage (fires 'storage'
-// events in other tabs) AND dispatches window CustomEvent('spicevilla-db-update').
+// events in other tabs) AND dispatches window CustomEvent('orderkar-db-update').
 // Pages use useLiveDb() which subscribes to both and polls every 5s.
 // ---------------------------------------------------------------------------
 
@@ -18,6 +19,7 @@ export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed';
 export type OrderItemStatus = 'pending' | 'preparing' | 'ready';
 export type StaffRole = 'owner' | 'manager' | 'waiter' | 'kitchen';
 export type WasteReason = 'spoilage' | 'theft' | 'overprep' | 'other';
+export type MenuTag = 'veg' | 'spicy' | 'bestseller';
 
 export interface Restaurant {
   id: string;
@@ -53,6 +55,7 @@ export interface MenuItem {
   image_url?: string;
   is_available: boolean;
   prep_time_minutes: number;
+  tags?: MenuTag[];
 }
 
 export interface OrderItem {
@@ -128,8 +131,8 @@ export interface DBState {
   reviews: Review[];
 }
 
-export const DB_KEY = 'spicevilla_db_v1';
-const UPDATE_EVENT = 'spicevilla-db-update';
+export const DB_KEY = 'orderkar_db_v1';
+const UPDATE_EVENT = 'orderkar-db-update';
 
 const uid = (): string =>
   Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -139,6 +142,16 @@ const isoMinsAgo = (mins: number): string =>
 
 const img = (id: string): string =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
+
+const IMG_TIKKA = img('1599487488170-d11ec9c172f0');
+const IMG_SEEKH = img('1603360946369-dc9bb6258143');
+const IMG_PLATTER = img('1555939594-58d7cb561ad1');
+const IMG_KARAHI = img('1565557623262-b51c2513a641');
+const IMG_DAAL = img('1585937421612-70a008356fbe');
+const IMG_BIRYANI = img('1589302168068-964664d93dc0');
+const IMG_BEEF_BIRYANI = img('1633945274405-b6c8069047b0');
+const IMG_NAAN = img('1567337710282-00832b415979');
+const IMG_CHAI = img('1571934811356-5cc061b6821f');
 
 // ---------------------------------------------------------------------------
 // Seed
@@ -150,50 +163,85 @@ function seed(): DBState {
     name: 'Spice Villa',
     tagline: 'Desi flavours, served with pride',
     cuisine: 'Pakistani',
-    address: 'Main Bahadurabad Road, Karachi',
-    phone: '021-34567890',
+    address: 'G.T. Road, Kharian, Punjab',
+    phone: '(053) 761 2345',
   };
 
   const tables: DiningTable[] = Array.from({ length: 6 }, (_, i) => ({
     id: `table_${i + 1}`,
     restaurant_id: restaurant.id,
     table_number: i + 1,
-    qr_code: `SPICEVILLA-T${i + 1}`,
+    qr_code: `ORDERKAR-T${i + 1}`,
     is_active: true,
   }));
 
   const categories: MenuCategory[] = [
-    { id: 'cat_starters', restaurant_id: restaurant.id, name: 'Starters', display_order: 1, is_active: true },
-    { id: 'cat_main', restaurant_id: restaurant.id, name: 'Main Course', display_order: 2, is_active: true },
-    { id: 'cat_biryani', restaurant_id: restaurant.id, name: 'Biryani', display_order: 3, is_active: true },
-    { id: 'cat_drinks', restaurant_id: restaurant.id, name: 'Drinks', display_order: 4, is_active: true },
+    { id: 'cat_bbq', restaurant_id: restaurant.id, name: 'BBQ & Grill', display_order: 1, is_active: true },
+    { id: 'cat_karahi', restaurant_id: restaurant.id, name: 'Karahi & Handi', display_order: 2, is_active: true },
+    { id: 'cat_biryani', restaurant_id: restaurant.id, name: 'Biryani & Rice', display_order: 3, is_active: true },
+    { id: 'cat_chinese', restaurant_id: restaurant.id, name: 'Chinese', display_order: 4, is_active: true },
+    { id: 'cat_fastfood', restaurant_id: restaurant.id, name: 'Fast Food', display_order: 5, is_active: true },
+    { id: 'cat_breads', restaurant_id: restaurant.id, name: 'Breads & Naan', display_order: 6, is_active: true },
+    { id: 'cat_drinks', restaurant_id: restaurant.id, name: 'Drinks & Shakes', display_order: 7, is_active: true },
+    { id: 'cat_desserts', restaurant_id: restaurant.id, name: 'Desserts', display_order: 8, is_active: true },
   ];
 
   const items: MenuItem[] = [
-    // Starters
-    { id: 'item_samosa', category_id: 'cat_starters', name: 'Crispy Samosa (2 pcs)', description: 'Golden flaky pastry stuffed with spiced potatoes and peas, served with imli chutney.', price: 120, image_url: img('1601050690597-df0568f70950'), is_available: true, prep_time_minutes: 10 },
-    { id: 'item_tikkaboti', category_id: 'cat_starters', name: 'Chicken Tikka Boti', description: 'Char-grilled chicken cubes marinated overnight in yoghurt and desi spices.', price: 350, image_url: img('1599487488170-d11ec9c172f0'), is_available: true, prep_time_minutes: 20 },
-    { id: 'item_seekhkebab', category_id: 'cat_starters', name: 'Beef Seekh Kebab (4 pcs)', description: 'Hand-minced beef with green chillies and coriander, flame-grilled on skewers.', price: 420, image_url: img('1603360946369-dc9bb6258143'), is_available: true, prep_time_minutes: 20 },
-    // Main Course
-    { id: 'item_karahi', category_id: 'cat_main', name: 'Chicken Karahi (Half)', description: 'The Lahore classic — wok-tossed chicken in fresh tomatoes, ginger and green chillies.', price: 850, image_url: img('1565557623262-b51c2513a641'), is_available: true, prep_time_minutes: 25 },
-    { id: 'item_daaltadka', category_id: 'cat_main', name: 'Daal Tadka', description: 'Slow-cooked yellow daal tempered with garlic, cumin and a spoon of desi ghee.', price: 320, image_url: img('1585937421612-70a008356fbe'), is_available: true, prep_time_minutes: 15 },
-    { id: 'item_chapli', category_id: 'cat_main', name: 'Beef Chapli Kebab (2 pcs)', description: 'Peshawari-style flat kebabs with pomegranate seeds, served with hot naan.', price: 280, is_available: true, prep_time_minutes: 15 },
-    { id: 'item_bbqplatter', category_id: 'cat_main', name: 'BBQ Platter (Serves 2)', description: 'Seekh kebab, tikka boti, malai boti and grilled wings with naan and chutneys.', price: 1450, image_url: img('1555939594-58d7cb561ad1'), is_available: true, prep_time_minutes: 30 },
-    { id: 'item_garlicnaan', category_id: 'cat_main', name: 'Garlic Naan (2 pcs)', description: 'Tandoor-fresh naan brushed with garlic butter — made to scoop up karahi.', price: 80, image_url: img('1567337710282-00832b415979'), is_available: true, prep_time_minutes: 8 },
-    // Biryani
-    { id: 'item_chickenbiryani', category_id: 'cat_biryani', name: 'Chicken Biryani', description: 'Fragrant basmati layered with masala chicken, served with raita and salad.', price: 320, image_url: img('1589302168068-964664d93dc0'), is_available: true, prep_time_minutes: 15 },
-    { id: 'item_beefbiryani', category_id: 'cat_biryani', name: 'Beef Biryani', description: 'Tender beef folded through saffron-kissed rice with crispy brown onions.', price: 380, image_url: img('1633945274405-b6c8069047b0'), is_available: true, prep_time_minutes: 15 },
-    { id: 'item_chickenpulao', category_id: 'cat_biryani', name: 'Chicken Pulao', description: 'Yakhni-cooked basmati with whole spices — milder, aromatic, deeply comforting.', price: 300, is_available: true, prep_time_minutes: 15 },
-    // Drinks
-    { id: 'item_doodhpatti', category_id: 'cat_drinks', name: 'Doodh Patti', description: 'Slow-brewed milky chai, the dhaba way — strong, sweet and soul-warming.', price: 150, image_url: img('1571934811356-5cc061b6821f'), is_available: true, prep_time_minutes: 5 },
-    { id: 'item_limesoda', category_id: 'cat_drinks', name: 'Fresh Lime Soda', description: 'Hand-pressed lime with soda and a whisper of black salt — served ice cold.', price: 180, is_available: true, prep_time_minutes: 5 },
-    { id: 'item_mangolassi', category_id: 'cat_drinks', name: 'Mango Lassi', description: 'Thick churned yoghurt blended with ripe Sindhri mangoes.', price: 250, is_available: true, prep_time_minutes: 5 },
+    // BBQ & Grill
+    { id: 'item_chicken_tikka', category_id: 'cat_bbq', name: 'Chicken Tikka', description: 'Char-grilled leg quarter marinated overnight in yoghurt, ajwain and desi masalas.', price: 280, image_url: IMG_TIKKA, is_available: true, prep_time_minutes: 20, tags: ['bestseller', 'spicy'] },
+    { id: 'item_seekh_kebab', category_id: 'cat_bbq', name: 'Seekh Kebab (4 pc)', description: 'Hand-minced beef with green chillies and fresh coriander, flame-grilled on skewers.', price: 450, image_url: IMG_SEEKH, is_available: true, prep_time_minutes: 20, tags: ['bestseller'] },
+    { id: 'item_malai_boti', category_id: 'cat_bbq', name: 'Malai Boti', description: 'Creamy, melt-in-mouth chicken cubes with white pepper and a whisper of cheese.', price: 520, is_available: true, prep_time_minutes: 20 },
+    { id: 'item_behari_boti', category_id: 'cat_bbq', name: 'Behari Boti', description: 'Smoky mustard-kissed strips bhunofied over coals — the desi BBQ lover\u2019s first love.', price: 480, is_available: true, prep_time_minutes: 20, tags: ['spicy'] },
+    { id: 'item_grilled_wings', category_id: 'cat_bbq', name: 'Grilled Wings (8 pc)', description: 'Tossed in a tangy chilli-garlic glaze, charred at the edges.', price: 420, is_available: true, prep_time_minutes: 15, tags: ['spicy'] },
+    { id: 'item_bbq_platter', category_id: 'cat_bbq', name: 'BBQ Platter (Serves 2)', description: 'Tikka, seekh kebab, malai boti and wings with naan, raita and imli chutney.', price: 1450, image_url: IMG_PLATTER, is_available: true, prep_time_minutes: 30, tags: ['bestseller'] },
+    // Karahi & Handi
+    { id: 'item_chicken_karahi_half', category_id: 'cat_karahi', name: 'Chicken Karahi (Half)', description: 'Wok-tossed in desi ghee with fresh tomatoes, julienned ginger and green chillies.', price: 850, image_url: IMG_KARAHI, is_available: true, prep_time_minutes: 25, tags: ['bestseller', 'spicy'] },
+    { id: 'item_chicken_karahi_full', category_id: 'cat_karahi', name: 'Chicken Karahi (Full)', description: 'Wok-tossed in desi ghee with fresh tomatoes, julienned ginger and green chillies.', price: 1600, image_url: IMG_KARAHI, is_available: true, prep_time_minutes: 30, tags: ['spicy'] },
+    { id: 'item_mutton_karahi_half', category_id: 'cat_karahi', name: 'Mutton Karahi (Half)', description: 'Tender mutton bhunofied the old way — black-pepper forward, no shortcuts.', price: 1450, image_url: IMG_KARAHI, is_available: true, prep_time_minutes: 30 },
+    { id: 'item_chicken_handi', category_id: 'cat_karahi', name: 'Chicken Handi', description: 'Boneless chicken simmered in a creamy tomato-makhani gravy, finished with fresh cream.', price: 950, image_url: IMG_KARAHI, is_available: true, prep_time_minutes: 25 },
+    { id: 'item_daal_fry', category_id: 'cat_karahi', name: 'Daal Fry', description: 'Slow-cooked yellow daal tempered with garlic, cumin and a spoon of desi ghee.', price: 350, image_url: IMG_DAAL, is_available: true, prep_time_minutes: 15, tags: ['veg'] },
+    { id: 'item_palak_paneer', category_id: 'cat_karahi', name: 'Palak Paneer', description: 'Fresh spinach folded with soft paneer cubes — mellow, rich and comforting.', price: 550, image_url: IMG_DAAL, is_available: true, prep_time_minutes: 20, tags: ['veg'] },
+    // Biryani & Rice
+    { id: 'item_chicken_biryani', category_id: 'cat_biryani', name: 'Chicken Biryani', description: 'Layered Sindhi-style with aloo, served with raita and kachumber salad.', price: 280, image_url: IMG_BIRYANI, is_available: true, prep_time_minutes: 15, tags: ['bestseller', 'spicy'] },
+    { id: 'item_beef_biryani', category_id: 'cat_biryani', name: 'Beef Biryani', description: 'Tender beef folded through saffron-kissed basmati with crispy brown onions.', price: 340, image_url: IMG_BEEF_BIRYANI, is_available: true, prep_time_minutes: 15, tags: ['spicy'] },
+    { id: 'item_chicken_pulao', category_id: 'cat_biryani', name: 'Chicken Pulao', description: 'Yakhni-cooked basmati with whole garam masala — aromatic, not fiery.', price: 300, image_url: IMG_BIRYANI, is_available: true, prep_time_minutes: 15 },
+    { id: 'item_veg_fried_rice', category_id: 'cat_biryani', name: 'Vegetable Fried Rice', description: 'Smoky wok-tossed rice with crunchy seasonal sabzi.', price: 320, is_available: true, prep_time_minutes: 12, tags: ['veg'] },
+    { id: 'item_chicken_fried_rice', category_id: 'cat_biryani', name: 'Chicken Fried Rice', description: 'Egg ribbons, spring onion and charred chicken in every bite.', price: 380, is_available: true, prep_time_minutes: 12 },
+    { id: 'item_zeera_rice', category_id: 'cat_biryani', name: 'Zeera Rice', description: 'Fluffy basmati tossed with roasted cumin — the quiet hero of every dawat.', price: 250, is_available: true, prep_time_minutes: 10, tags: ['veg'] },
+    // Chinese
+    { id: 'item_chow_mein', category_id: 'cat_chinese', name: 'Chicken Chow Mein', description: 'Street-style wok noodles with julienned chicken and crunchy vegetables.', price: 420, is_available: true, prep_time_minutes: 15 },
+    { id: 'item_manchurian', category_id: 'cat_chinese', name: 'Chicken Manchurian with Rice', description: 'Crispy chicken balls in a garlicky soy glaze, served over egg fried rice.', price: 450, is_available: true, prep_time_minutes: 18 },
+    { id: 'item_sweet_sour', category_id: 'cat_chinese', name: 'Sweet & Sour Chicken', description: 'Golden chicken tossed with peppers and pineapple in a glossy tangy sauce.', price: 480, is_available: true, prep_time_minutes: 18 },
+    { id: 'item_kung_pao', category_id: 'cat_chinese', name: 'Kung Pao Chicken', description: 'Fiery dried chillies, roasted peanuts and that unmistakable wok hei.', price: 520, is_available: true, prep_time_minutes: 18, tags: ['spicy'] },
+    { id: 'item_hot_sour_soup', category_id: 'cat_chinese', name: 'Hot & Sour Soup', description: 'Peppery, tangy and loaded — the desi-Chinese hug in a bowl.', price: 280, is_available: true, prep_time_minutes: 10, tags: ['spicy'] },
+    // Fast Food
+    { id: 'item_zinger', category_id: 'cat_fastfood', name: 'Zinger Burger', description: 'Crunchy marinated fillet, mayo and crisp lettuce in a toasted brioche bun.', price: 450, is_available: true, prep_time_minutes: 12, tags: ['bestseller'] },
+    { id: 'item_smash_burger', category_id: 'cat_fastfood', name: 'Beef Smash Burger', description: 'Double smashed patty, cheddar, caramelised onions and smoky house sauce.', price: 650, is_available: true, prep_time_minutes: 15, tags: ['bestseller'] },
+    { id: 'item_loaded_fries', category_id: 'cat_fastfood', name: 'Loaded Fries', description: 'Crispy fries drowned in cheese sauce, chicken chunks and jalape\u00f1os.', price: 380, is_available: true, prep_time_minutes: 10 },
+    { id: 'item_broast', category_id: 'cat_fastfood', name: 'Crispy Broast (2 pc)', description: 'Pressure-fried extra crunchy — with fries and garlic mayo.', price: 420, is_available: true, prep_time_minutes: 15 },
+    { id: 'item_shawarma', category_id: 'cat_fastfood', name: 'Chicken Shawarma', description: 'Char-grilled strips, pickles and toum wrapped in soft khubz.', price: 300, is_available: true, prep_time_minutes: 10 },
+    // Breads & Naan
+    { id: 'item_roghni_naan', category_id: 'cat_breads', name: 'Roghni Naan', description: 'Sesame-topped and tandoor-blistered — the karahi\u2019s best friend.', price: 60, image_url: IMG_NAAN, is_available: true, prep_time_minutes: 5, tags: ['veg'] },
+    { id: 'item_garlic_naan', category_id: 'cat_breads', name: 'Garlic Naan', description: 'Brushed with garlic butter — made for scooping.', price: 90, image_url: IMG_NAAN, is_available: true, prep_time_minutes: 5, tags: ['veg'] },
+    { id: 'item_cheese_naan', category_id: 'cat_breads', name: 'Cheese Naan', description: 'Stuffed with molten mozzarella. Dangerously good.', price: 150, image_url: IMG_NAAN, is_available: true, prep_time_minutes: 8, tags: ['veg', 'bestseller'] },
+    { id: 'item_tandoori_roti', category_id: 'cat_breads', name: 'Tandoori Roti (2 pc)', description: 'Whole-wheat, clay-oven fresh.', price: 50, is_available: true, prep_time_minutes: 5, tags: ['veg'] },
+    // Drinks & Shakes
+    { id: 'item_lime_soda', category_id: 'cat_drinks', name: 'Fresh Lime Soda', description: 'Hand-pressed lime, soda and black salt — served ice cold.', price: 180, is_available: true, prep_time_minutes: 5 },
+    { id: 'item_mango_shake', category_id: 'cat_drinks', name: 'Mango Shake', description: 'Thick-blended Sindhri mangoes with a scoop of vanilla ice cream.', price: 320, is_available: true, prep_time_minutes: 5, tags: ['bestseller'] },
+    { id: 'item_kashmiri_chai', category_id: 'cat_drinks', name: 'Kashmiri Chai', description: 'Pink, lightly salted, crowned with crushed pistachio and almond.', price: 200, image_url: IMG_CHAI, is_available: true, prep_time_minutes: 8 },
+    { id: 'item_doodh_patti', category_id: 'cat_drinks', name: 'Doodh Patti', description: 'Slow-brewed milky chai, the dhaba way — strong and soul-warming.', price: 150, image_url: IMG_CHAI, is_available: true, prep_time_minutes: 5 },
+    { id: 'item_mint_margarita', category_id: 'cat_drinks', name: 'Mint Margarita', description: 'Crushed mint, lime and soda over a mountain of ice.', price: 220, is_available: true, prep_time_minutes: 5 },
+    // Desserts
+    { id: 'item_gulab_jamun', category_id: 'cat_desserts', name: 'Gulab Jamun (4 pc)', description: 'Warm, syrup-soaked and impossibly soft.', price: 250, is_available: true, prep_time_minutes: 5, tags: ['veg', 'bestseller'] },
+    { id: 'item_kheer', category_id: 'cat_desserts', name: 'Kheer', description: 'Slow-cooked rice pudding with cardamom, chilled in a clay bowl.', price: 220, is_available: true, prep_time_minutes: 5, tags: ['veg'] },
+    { id: 'item_kulfi_falooda', category_id: 'cat_desserts', name: 'Kulfi Falooda', description: 'Dense malai kulfi over vermicelli, basil seeds and rose syrup.', price: 350, is_available: true, prep_time_minutes: 8, tags: ['veg', 'bestseller'] },
+    { id: 'item_shahi_tukray', category_id: 'cat_desserts', name: 'Shahi Tukray', description: 'Saffron-soaked fried bread crowned with rabri and pistachio.', price: 300, is_available: true, prep_time_minutes: 8, tags: ['veg'] },
   ];
 
   const users: StaffUser[] = [
-    { id: 'user_manager', restaurant_id: restaurant.id, email: 'manager@spicevilla.pk', password: 'demo123', role: 'manager', name: 'Ali Raza', phone: '0300-1234567', is_active: true },
-    { id: 'user_kitchen', restaurant_id: restaurant.id, email: 'kitchen@spicevilla.pk', password: 'demo123', role: 'kitchen', name: 'Bilal Ahmed', phone: '0300-2345678', is_active: true },
-    { id: 'user_waiter', restaurant_id: restaurant.id, email: 'waiter@spicevilla.pk', password: 'demo123', role: 'waiter', name: 'Usman Tariq', phone: '0300-3456789', is_active: true },
+    { id: 'user_manager', restaurant_id: restaurant.id, email: 'manager@orderkar.pk', password: 'demo123', role: 'manager', name: 'Ali Raza', phone: '0300-1234567', is_active: true },
+    { id: 'user_kitchen', restaurant_id: restaurant.id, email: 'kitchen@orderkar.pk', password: 'demo123', role: 'kitchen', name: 'Bilal Ahmed', phone: '0300-2345678', is_active: true },
+    { id: 'user_waiter', restaurant_id: restaurant.id, email: 'waiter@orderkar.pk', password: 'demo123', role: 'waiter', name: 'Usman Tariq', phone: '0300-3456789', is_active: true },
   ];
 
   // Demo orders for today so every screen has live data on first open.
@@ -235,19 +283,19 @@ function seed(): DBState {
   };
 
   const orders: Order[] = [
-    mkOrder(1, 3, 'completed', 'ready', [['item_chickenbiryani', 2], ['item_doodhpatti', 2]], 300, { customer_name: 'Ahmed' }),
-    mkOrder(2, 5, 'completed', 'ready', [['item_karahi', 1], ['item_garlicnaan', 4]], 180, { customer_name: 'Fatima' }),
-    mkOrder(3, 2, 'completed', 'ready', [['item_beefbiryani', 2], ['item_limesoda', 1]], 90, { customer_name: 'Hassan' }),
-    mkOrder(4, 1, 'ready', 'ready', [['item_bbqplatter', 1], ['item_mangolassi', 2]], 25, { customer_name: 'Ayesha' }),
-    mkOrder(5, 4, 'preparing', 'preparing', [['item_karahi', 2], ['item_garlicnaan', 4]], 12, { customer_name: 'Bilal', waiter_id: 'user_waiter' }),
-    mkOrder(6, 6, 'pending', 'pending', [['item_samosa', 4], ['item_doodhpatti', 4]], 3, { notes: 'One samosa extra spicy' }),
+    mkOrder(1, 3, 'completed', 'ready', [['item_chicken_biryani', 2], ['item_doodh_patti', 2]], 300, { customer_name: 'Ahmed' }),
+    mkOrder(2, 5, 'completed', 'ready', [['item_chicken_karahi_half', 1], ['item_roghni_naan', 4]], 180, { customer_name: 'Fatima' }),
+    mkOrder(3, 2, 'completed', 'ready', [['item_beef_biryani', 2], ['item_lime_soda', 1]], 90, { customer_name: 'Hassan' }),
+    mkOrder(4, 1, 'ready', 'ready', [['item_bbq_platter', 1], ['item_mango_shake', 2]], 25, { customer_name: 'Ayesha' }),
+    mkOrder(5, 4, 'preparing', 'preparing', [['item_mutton_karahi_half', 1], ['item_garlic_naan', 2]], 12, { customer_name: 'Bilal', waiter_id: 'user_waiter' }),
+    mkOrder(6, 6, 'pending', 'pending', [['item_chicken_tikka', 2], ['item_mint_margarita', 2]], 3, { notes: 'One tikka extra spicy' }),
   ];
 
   const wasteLogs: WasteLog[] = [
     {
-      id: 'waste_1', restaurant_id: restaurant.id, menu_item_id: 'item_samosa',
-      item_name: 'Crispy Samosa (2 pcs)', quantity: 6, reason: 'overprep',
-      logged_by: 'Ali Raza', logged_at: isoMinsAgo(240), estimated_cost: 360,
+      id: 'waste_1', restaurant_id: restaurant.id, menu_item_id: 'item_chicken_tikka',
+      item_name: 'Chicken Tikka', quantity: 4, reason: 'overprep',
+      logged_by: 'Ali Raza', logged_at: isoMinsAgo(240), estimated_cost: 1120,
     },
   ];
 
@@ -373,7 +421,7 @@ export function getOrder(db: DBState, id: string): Order | undefined {
 export function getActiveOrders(db: DBState): Order[] {
   return db.orders
     .filter((o) => o.status === 'pending' || o.status === 'preparing' || o.status === 'ready')
-    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 const isToday = (iso: string): boolean =>

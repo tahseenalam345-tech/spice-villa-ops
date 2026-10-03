@@ -90,23 +90,23 @@ function ManagerApp() {
   };
 
   const inputCls =
-    'w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-[#FAF6EE] focus:border-[#E9A13B]/60 focus:outline-none';
+    'w-full rounded-xl border border-cream/10 bg-white/[0.05] px-4 py-2.5 text-sm text-cream focus:border-saffron/60 focus:outline-none';
 
   return (
-    <div className="min-h-screen bg-[#16130E] text-[#FAF6EE]">
+    <div className="min-h-screen bg-pine-deep text-cream">
       <TopBar title="Manager Dashboard" subtitle={db.restaurant.name} />
 
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6">
         {/* Stats */}
         <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label="Today's orders" value={String(stats.ordersToday)} sub="All tables" />
-          <StatCard label="Revenue today" value={pkr(stats.revenueToday)} sub="Completed + open orders" accent="#4ADE80" />
+          <StatCard label="Revenue today" value={pkr(stats.revenueToday)} sub="Completed + open orders" accent="#35A06B" />
           <StatCard label="In the kitchen" value={String(stats.pendingCount)} sub="New + preparing" accent="#7FB3FF" />
           <StatCard
             label="Avg. prep time"
             value={stats.avgPrepMinutes > 0 ? `${stats.avgPrepMinutes} min` : '—'}
             sub="Completed orders today"
-            accent="#c084fc"
+            accent="#B794F6"
           />
         </section>
 
@@ -114,7 +114,7 @@ function ManagerApp() {
         <section className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-xl font-semibold">Live orders</h2>
+              <h2 className="font-display text-xl font-bold">Live orders</h2>
               <div className="flex flex-wrap gap-1.5">
                 {ORDER_FILTERS.map((f) => (
                   <button
@@ -122,8 +122,8 @@ function ManagerApp() {
                     onClick={() => setOrderFilter(f.key)}
                     className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
                       orderFilter === f.key
-                        ? 'bg-[#E9A13B] text-[#16130E]'
-                        : 'border border-white/15 text-[#FAF6EE]/65 hover:border-white/30'
+                        ? 'bg-saffron text-pine-deep'
+                        : 'border border-cream/15 text-cream/65 hover:border-cream/30'
                     }`}
                   >
                     {f.label}
@@ -132,11 +132,11 @@ function ManagerApp() {
               </div>
             </div>
 
-            <div className="mt-3 overflow-hidden rounded-2xl border border-white/10">
+            <div className="mt-3 overflow-hidden rounded-2xl border border-pine-line/40">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] text-left text-sm">
                   <thead>
-                    <tr className="bg-white/[0.04] text-xs uppercase tracking-widest text-[#FAF6EE]/45">
+                    <tr className="bg-pine-card text-xs uppercase tracking-widest text-cream/45">
                       <th className="px-4 py-3">Order</th>
                       <th className="px-4 py-3">Table</th>
                       <th className="px-4 py-3">Items</th>
@@ -148,7 +148,7 @@ function ManagerApp() {
                   <tbody>
                     {visibleOrders.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-[#FAF6EE]/45">
+                        <td colSpan={6} className="px-4 py-8 text-center text-cream/45">
                           No orders in this view.
                         </td>
                       </tr>
@@ -156,20 +156,20 @@ function ManagerApp() {
                     {visibleOrders.map((o) => {
                       const adv = NEXT[o.status];
                       return (
-                        <tr key={o.id} className="border-t border-white/10">
+                        <tr key={o.id} className="border-t border-pine-line/40">
                           <td className="px-4 py-3">
                             <p className="font-medium">#{o.order_number}</p>
-                            <p className="text-xs text-[#FAF6EE]/45">
+                            <p className="text-xs text-cream/45">
                               {fmtTime(o.created_at)} · {fmtAgo(o.created_at)}
                             </p>
                           </td>
                           <td className="px-4 py-3 font-medium">
                             {tableNumber(db, o.table_id) ? `T${tableNumber(db, o.table_id)}` : '—'}
                           </td>
-                          <td className="px-4 py-3 text-[#FAF6EE]/70">
+                          <td className="px-4 py-3 text-cream/70">
                             {o.items.map((i) => `${i.quantity}× ${i.item_name}`).join(', ')}
                           </td>
-                          <td className="px-4 py-3 font-medium text-[#E9A13B]">{pkr(o.total_amount)}</td>
+                          <td className="px-4 py-3 font-medium text-saffron">{pkr(o.total_amount)}</td>
                           <td className="px-4 py-3">
                             <StatusPill status={o.status} />
                           </td>
@@ -177,12 +177,12 @@ function ManagerApp() {
                             {adv ? (
                               <button
                                 onClick={() => updateOrderStatus(o.id, adv.next)}
-                                className="rounded-lg border border-[#E9A13B]/50 px-3 py-1.5 text-xs font-bold text-[#E9A13B] transition hover:bg-[#E9A13B] hover:text-[#16130E]"
+                                className="rounded-lg border border-saffron/50 px-3 py-1.5 text-xs font-bold text-saffron transition hover:bg-saffron hover:text-pine-deep"
                               >
                                 {adv.label}
                               </button>
                             ) : (
-                              <span className="text-xs text-[#FAF6EE]/35">Done</span>
+                              <span className="text-xs text-cream/35">Done</span>
                             )}
                           </td>
                         </tr>
@@ -196,7 +196,7 @@ function ManagerApp() {
 
           {/* Table map */}
           <div>
-            <h2 className="font-display text-xl font-semibold">Tables</h2>
+            <h2 className="font-display text-xl font-bold">Tables</h2>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {tables.map((t) => {
                 const active = tableActiveOrder(db, t.id);
@@ -204,21 +204,21 @@ function ManagerApp() {
                   <div
                     key={t.id}
                     className={`rounded-2xl border p-4 ${
-                      active ? 'border-[#E9A13B]/50 bg-[#E9A13B]/5' : 'border-white/10 bg-[#211C14]'
+                      active ? 'border-saffron/50 bg-saffron/5' : 'border-pine-line/40 bg-pine-card'
                     }`}
                   >
-                    <p className="font-display text-lg font-semibold">Table {t.table_number}</p>
+                    <p className="font-display text-lg font-bold">Table {t.table_number}</p>
                     {active ? (
                       <>
-                        <p className="mt-1 text-xs font-bold uppercase tracking-wider text-[#E9A13B]">
+                        <p className="mt-1 text-xs font-bold uppercase tracking-wider text-saffron">
                           Occupied
                         </p>
-                        <p className="mt-0.5 text-xs text-[#FAF6EE]/55">
+                        <p className="mt-0.5 text-xs text-cream/55">
                           #{active.order_number} · {fmtAgo(active.created_at)}
                         </p>
                       </>
                     ) : (
-                      <p className="mt-1 text-xs font-medium uppercase tracking-wider text-[#4ADE80]">
+                      <p className="mt-1 text-xs font-medium uppercase tracking-wider text-[#8FDCB2]">
                         Empty
                       </p>
                     )}
@@ -228,19 +228,19 @@ function ManagerApp() {
             </div>
 
             {/* Hourly chart */}
-            <h2 className="mt-6 font-display text-xl font-semibold">Orders per hour</h2>
-            <div className="mt-3 rounded-2xl border border-white/10 bg-[#211C14] p-4">
+            <h2 className="mt-6 font-display text-xl font-bold">Orders per hour</h2>
+            <div className="mt-3 rounded-2xl border border-pine-line/40 bg-pine-card p-4">
               <div className="flex h-32 items-end gap-1">
                 {hourly.map((n, h) => (
                   <div key={h} className="flex flex-1 flex-col items-center justify-end" title={`${h}:00 — ${n} orders`}>
                     <div
-                      className={`w-full rounded-t ${h === nowHour ? 'bg-[#E9A13B]' : 'bg-[#E9A13B]/35'}`}
+                      className={`w-full rounded-t ${h === nowHour ? 'bg-saffron' : 'bg-saffron/35'}`}
                       style={{ height: `${Math.max(3, (n / maxHour) * 100)}%` }}
                     />
                   </div>
                 ))}
               </div>
-              <div className="mt-2 flex justify-between text-[10px] text-[#FAF6EE]/40">
+              <div className="mt-2 flex justify-between text-[10px] text-cream/40">
                 <span>12am</span>
                 <span>6am</span>
                 <span>12pm</span>
@@ -254,29 +254,29 @@ function ManagerApp() {
         {/* Waste + reviews */}
         <section className="grid gap-6 lg:grid-cols-2">
           <div>
-            <h2 className="font-display text-xl font-semibold">Waste log</h2>
-            <form onSubmit={submitWaste} className="mt-3 rounded-2xl border border-white/10 bg-[#211C14] p-5">
+            <h2 className="font-display text-xl font-bold">Waste log</h2>
+            <form onSubmit={submitWaste} className="mt-3 rounded-2xl border border-pine-line/40 bg-pine-card p-5">
               <div className="grid grid-cols-2 gap-3">
                 <label className="col-span-2 block">
-                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[#FAF6EE]/50">Item</span>
-                  <select value={wItem} onChange={(e) => setWItem(e.target.value)} className={`${inputCls} appearance-none bg-[#211C14]`}>
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-cream/50">Item</span>
+                  <select value={wItem} onChange={(e) => setWItem(e.target.value)} className={`${inputCls} appearance-none bg-pine-card`}>
                     {db.items.map((i) => (
-                      <option key={i.id} value={i.id} className="bg-[#211C14]">
+                      <option key={i.id} value={i.id} className="bg-pine-card">
                         {i.name}
                       </option>
                     ))}
                   </select>
                 </label>
                 <label className="block">
-                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[#FAF6EE]/50">Quantity</span>
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-cream/50">Quantity</span>
                   <input value={wQty} onChange={(e) => setWQty(e.target.value)} inputMode="numeric" className={inputCls} />
                 </label>
                 <label className="block">
-                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[#FAF6EE]/50">Est. cost (Rs.)</span>
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-cream/50">Est. cost (Rs.)</span>
                   <input value={wCost} onChange={(e) => setWCost(e.target.value)} inputMode="decimal" placeholder="0" className={inputCls} />
                 </label>
                 <label className="col-span-2 block">
-                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[#FAF6EE]/50">Reason</span>
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-cream/50">Reason</span>
                   <div className="flex flex-wrap gap-2">
                     {WASTE_REASONS.map((r) => (
                       <button
@@ -285,8 +285,8 @@ function ManagerApp() {
                         onClick={() => setWReason(r.value)}
                         className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
                           wReason === r.value
-                            ? 'bg-[#E9A13B] text-[#16130E]'
-                            : 'border border-white/15 text-[#FAF6EE]/65'
+                            ? 'bg-saffron text-pine-deep'
+                            : 'border border-cream/15 text-cream/65'
                         }`}
                       >
                         {r.label}
@@ -295,10 +295,10 @@ function ManagerApp() {
                   </div>
                 </label>
               </div>
-              {wMsg && <p className="mt-3 text-sm text-[#4ADE80]">{wMsg}</p>}
+              {wMsg && <p className="mt-3 text-sm text-[#8FDCB2]">{wMsg}</p>}
               <button
                 type="submit"
-                className="mt-4 w-full rounded-xl bg-[#E9A13B] py-3 text-sm font-bold text-[#16130E] transition hover:bg-[#f2b45c]"
+                className="mt-4 w-full rounded-xl bg-saffron py-3 text-sm font-bold text-pine-deep transition hover:bg-saffron-deep"
               >
                 Log waste
               </button>
@@ -306,44 +306,44 @@ function ManagerApp() {
 
             <div className="mt-3 space-y-2">
               {wasteLogs.slice(0, 6).map((w) => (
-                <div key={w.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-[#211C14] px-4 py-3 text-sm">
+                <div key={w.id} className="flex items-center justify-between rounded-xl border border-pine-line/40 bg-pine-card px-4 py-3 text-sm">
                   <div>
-                    <p className="font-medium text-[#FAF6EE]">
+                    <p className="font-medium text-cream">
                       {w.quantity}× {w.item_name}
                     </p>
-                    <p className="text-xs capitalize text-[#FAF6EE]/45">
+                    <p className="text-xs capitalize text-cream/45">
                       {w.reason} · {w.logged_by} · {fmtAgo(w.logged_at)}
                     </p>
                   </div>
-                  <span className="font-medium text-red-300">{pkr(w.estimated_cost)}</span>
+                  <span className="font-medium text-chili">{pkr(w.estimated_cost)}</span>
                 </div>
               ))}
               {wasteLogs.length === 0 && (
-                <p className="text-sm text-[#FAF6EE]/45">No waste logged yet.</p>
+                <p className="text-sm text-cream/45">No waste logged yet.</p>
               )}
             </div>
           </div>
 
           <div>
-            <h2 className="font-display text-xl font-semibold">Customer reviews</h2>
+            <h2 className="font-display text-xl font-bold">Customer reviews</h2>
             <div className="mt-3 space-y-3">
               {reviews.length === 0 && (
-                <p className="text-sm text-[#FAF6EE]/45">No reviews yet.</p>
+                <p className="text-sm text-cream/45">No reviews yet.</p>
               )}
               {reviews.slice(0, 6).map((r) => {
                 const order = db.orders.find((o) => o.id === r.order_id);
                 return (
-                  <div key={r.id} className="rounded-2xl border border-white/10 bg-[#211C14] p-4">
+                  <div key={r.id} className="rounded-2xl border border-pine-line/40 bg-pine-card p-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-[#E9A13B]" aria-label={`${r.rating} out of 5 stars`}>
+                      <span className="text-saffron" aria-label={`${r.rating} out of 5 stars`}>
                         {'★'.repeat(r.rating)}
-                        <span className="text-white/20">{'★'.repeat(5 - r.rating)}</span>
+                        <span className="text-cream/20">{'★'.repeat(5 - r.rating)}</span>
                       </span>
-                      <span className="text-xs text-[#FAF6EE]/40">
+                      <span className="text-xs text-cream/40">
                         {order ? `Order #${order.order_number}` : ''} · {fmtAgo(r.created_at)}
                       </span>
                     </div>
-                    {r.comment && <p className="mt-2 text-sm text-[#FAF6EE]/75">{r.comment}</p>}
+                    {r.comment && <p className="mt-2 text-sm text-cream/75">{r.comment}</p>}
                   </div>
                 );
               })}
