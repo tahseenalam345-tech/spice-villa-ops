@@ -1,25 +1,30 @@
-import Link from 'next/link';
-import BrandMark from '@/components/BrandMark';
+'use client';
 
 // ---------------------------------------------------------------------------
 // OrderKar — product landing page (sells the software to restaurant owners).
-// The live demo runs on sample data for "Spice Villa", Kharian.
+// KoDriftDev design language: silver canvas, Manrope hero, neo-brutalist CTAs.
 // ---------------------------------------------------------------------------
+
+import { useState } from 'react';
+import Link from 'next/link';
+import BrandMark from '@/components/BrandMark';
+import { LinkBtn, ThemeToggle, Card, Pill } from '@/components/ui';
 
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
   { label: 'Live demo', href: '#demo' },
   { label: 'Pricing', href: '#pricing' },
+  { label: 'FAQ', href: '#faq' },
 ];
 
 const FEATURES = [
   {
     title: 'QR table ordering',
-    desc: 'Guests scan the code on their table and order from their own phone. No app download, no waiting for a waiter.',
+    desc: 'Guests scan the code on their table and order from their own phone. No app download, no flagging down a waiter.',
     href: '/table/1',
     cta: 'Try customer demo',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
         <rect x="3" y="3" width="7" height="7" rx="1.5" />
         <rect x="14" y="3" width="7" height="7" rx="1.5" />
         <rect x="3" y="14" width="7" height="7" rx="1.5" />
@@ -30,11 +35,11 @@ const FEATURES = [
   },
   {
     title: 'Live kitchen display',
-    desc: 'Orders fire onto the kitchen screen instantly — with timers, priorities, sound alerts and one-tap status updates.',
+    desc: 'Orders fire onto the kitchen screen instantly — timers, priorities, sound alerts and one-tap status updates.',
     href: '/login',
     cta: 'See kitchen screen',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
         <path d="M12 3c1.5 2.5 4 4.5 4 8a4 4 0 1 1-8 0c0-1.5.5-2.5 1.2-3.7.4 1 1 1.7 1.8 2.2C10.6 7 11 5 12 3z" strokeLinejoin="round" />
         <path d="M9 21h6" strokeLinecap="round" />
       </svg>
@@ -46,7 +51,7 @@ const FEATURES = [
     href: '/login',
     cta: 'See waiter screen',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
         <rect x="5" y="4" width="14" height="17" rx="2" />
         <path d="M9 4.5V3h6v1.5" strokeLinecap="round" />
         <path d="M9 11h6M9 15h4" strokeLinecap="round" />
@@ -54,12 +59,12 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Manager analytics',
-    desc: 'Live sales, table map, hourly rush charts, waste logs and customer reviews — the whole floor in one dashboard.',
+    title: 'Owner analytics',
+    desc: 'Year of history, rush-hour heatmaps, top items, staff leaderboard, waste tracking — the whole business in one dashboard.',
     href: '/login',
-    cta: 'See dashboard',
+    cta: 'See owner dashboard',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
         <path d="M4 20V10M10 20V4M16 20v-8M21 20H3" strokeLinecap="round" />
       </svg>
     ),
@@ -74,6 +79,14 @@ const DEMOS = [
     href: '/table/1',
     cta: 'Open Table 1',
     cred: null as string | null,
+  },
+  {
+    name: 'Owner',
+    tag: 'Superadmin',
+    desc: 'Full business analytics — revenue trends, rush hours, top items, staff leaderboard, live previews.',
+    href: '/login',
+    cta: 'Sign in as owner',
+    cred: 'owner@orderkar.pk',
   },
   {
     name: 'Waiter',
@@ -101,419 +114,352 @@ const DEMOS = [
   },
 ];
 
-const STEPS = [
-  { n: '01', title: 'Guest scans the QR', desc: 'Every table gets its own code. The menu opens instantly in the browser — no app to install.' },
-  { n: '02', title: 'Order from the phone', desc: 'Big photos, honest PKR prices, special instructions — a full order in under a minute.' },
-  { n: '03', title: 'Kitchen fires it up', desc: 'The order lands on the kitchen display with a timer, a sound alert and a flash.' },
-  { n: '04', title: 'Manager sees everything', desc: 'Sales, tables, waste and reviews update live on the dashboard.' },
+const FAQS = [
+  {
+    q: 'Do guests need to install an app?',
+    a: 'No. Guests scan the QR on their table and the menu opens in their browser — ordering, cart and live order tracking all work without any download.',
+  },
+  {
+    q: 'Does it work without the internet on the restaurant Wi-Fi?',
+    a: 'The demo runs fully in the browser with local data. The production version syncs through the cloud so every screen — customer, waiter, kitchen, manager — stays live in real time.',
+  },
+  {
+    q: 'Can I use my own menu and prices?',
+    a: 'Yes. The manager dashboard includes a menu editor (demo build ships with Spice Villa\u2019s 41-item sample menu). Categories, items, prices and availability are all editable.',
+  },
+  {
+    q: 'What do I need in the restaurant to run it?',
+    a: 'Printed QR codes on tables (generated in-app), one tablet or TV for the kitchen display, and phones for waiters. That\u2019s it — no special hardware.',
+  },
+  {
+    q: 'Is my data safe?',
+    a: 'The demo keeps everything in the browser. Production runs on a managed database with daily backups, and staff log in with role-based access.',
+  },
 ];
 
-const PLANS = [
+const PRICING = [
   {
     name: 'Demo',
     price: 'Free',
     per: 'forever',
-    desc: 'The full product running on sample data.',
-    features: ['All four screens', '41-dish sample menu', '6 demo tables', 'No signup needed'],
-    cta: 'Try the live demo',
+    desc: 'Try every screen with sample data.',
+    features: ['All 5 demo screens', 'Sample Spice Villa menu', 'QR code generator', 'No credit card'],
+    cta: 'Try the demo',
     href: '#demo',
-    highlight: false,
+    hot: false,
   },
   {
     name: 'Standard',
     price: 'Rs 4,999',
     per: '/month',
-    desc: 'For a single dine-in branch going digital.',
-    features: ['QR table ordering', 'Kitchen display + waiter app', 'Manager dashboard', 'Menu management', 'WhatsApp support'],
-    cta: 'Talk to us',
-    href: '#faq',
-    highlight: true,
+    desc: 'For single-outlet restaurants.',
+    features: ['Unlimited orders', 'QR ordering + kitchen display', 'Waiter & manager apps', 'Menu editor', 'WhatsApp support'],
+    cta: 'Start 14-day trial',
+    href: '#demo',
+    hot: true,
   },
   {
     name: 'Pro',
     price: 'Rs 9,999',
     per: '/month',
-    desc: 'For growing restaurants and multi-branch setups.',
-    features: ['Everything in Standard', 'Multi-branch dashboard', 'Waste + staff analytics', 'Priority support', 'Onboarding & training'],
+    desc: 'For growing brands & multi-branch.',
+    features: ['Everything in Standard', 'Owner analytics suite', 'Multi-branch support', 'Staff performance reports', 'Priority onboarding'],
     cta: 'Talk to us',
-    href: '#faq',
-    highlight: false,
+    href: '#demo',
+    hot: false,
   },
 ];
 
-const FAQS = [
-  {
-    q: 'Do I need any special hardware?',
-    a: 'No. OrderKar runs on hardware you already have — guests use their own phones, the kitchen display works on any tablet, TV or old PC with a browser, and waiters can use any smartphone.',
-  },
-  {
-    q: 'Does it work if the internet is slow?',
-    a: 'The demo you see here runs entirely in the browser. Production setups are deployed so your floor keeps running on your local network, with cloud sync when the connection is available.',
-  },
-  {
-    q: 'Can you set up my restaurant\u2019s menu?',
-    a: 'Yes — onboarding includes digitising your complete menu: dishes, categories, photos, PKR prices, and spice levels. Most restaurants are live within a week.',
-  },
-];
-
-function PhoneMockup() {
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="relative mx-auto w-[290px] sm:w-[310px]">
-      {/* Phone frame */}
-      <div className="overflow-hidden rounded-[2.75rem] border-[10px] border-pine-deep bg-cream shadow-lift">
-        <div className="bg-pine px-4 pb-3 pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BrandMark size={30} />
-              <div>
-                <p className="font-display text-sm font-semibold leading-tight text-cream">Spice Villa</p>
-                <p className="text-[10px] text-cream/60">Desi flavours, served with pride</p>
-              </div>
-            </div>
-            <span className="rounded-full bg-saffron px-2.5 py-1 text-[10px] font-bold text-pine-deep">
-              Table 4
-            </span>
-          </div>
-        </div>
-        <div className="space-y-2 p-3">
-          <div className="flex gap-1.5">
-            {['BBQ & Grill', 'Karahi', 'Biryani'].map((c, i) => (
-              <span
-                key={c}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                  i === 0 ? 'bg-pine text-cream' : 'border border-ink/15 text-ink-soft'
-                }`}
-              >
-                {c}
-              </span>
-            ))}
-          </div>
-          {[
-            { n: 'Chicken Tikka', p: 'Rs. 280' },
-            { n: 'Seekh Kebab (4 pc)', p: 'Rs. 450' },
-            { n: 'Chicken Karahi (Half)', p: 'Rs. 850' },
-          ].map((d) => (
-            <div key={d.n} className="flex items-center justify-between rounded-xl border border-ink/10 bg-white px-3 py-2.5">
-              <div>
-                <p className="text-xs font-semibold text-ink">{d.n}</p>
-                <p className="text-xs font-bold text-pine">{d.p}</p>
-              </div>
-              <span className="rounded-lg bg-saffron px-3 py-1 text-[10px] font-bold text-pine-deep">ADD</span>
-            </div>
-          ))}
-          <div className="flex items-center justify-between rounded-xl bg-pine px-4 py-3">
-            <span className="text-xs font-bold text-cream">View cart · 3 items</span>
-            <span className="text-xs font-bold text-saffron">Rs. 1,580</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Floating kitchen ticket */}
-      <div className="animate-float-soft absolute -left-24 top-16 hidden w-44 rounded-2xl border border-pine-line/40 bg-pine-deep p-3 shadow-lift sm:block">
-        <p className="font-display text-lg font-bold text-cream">#1006</p>
-        <p className="text-xs font-semibold text-saffron">Table 4 · Preparing</p>
-        <p className="mt-1 font-mono text-sm font-bold text-cream/80">12:34</p>
-        <p className="mt-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-leaf">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-leaf" /> Live
-        </p>
-      </div>
-
-      {/* Floating ready toast */}
-      <div className="absolute -right-20 bottom-24 hidden w-48 rounded-2xl border border-ink/10 bg-white p-3 shadow-lift sm:block">
-        <p className="flex items-center gap-2 text-xs font-bold text-leaf-deep">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-leaf/15 text-[11px]">✓</span>
-          Order #1004 is ready
-        </p>
-        <p className="mt-1 text-[11px] text-ink-soft">Table 1 · on its way to the guest</p>
-      </div>
+    <div className="rounded-card border border-line bg-surface shadow-card">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+      >
+        <span className="font-display text-[15px] font-bold text-ink">{q}</span>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border-2 border-ink text-ink transition-transform ${open ? 'rotate-45 bg-ink text-white' : 'bg-surface'}`}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+        </span>
+      </button>
+      {open && <p className="px-5 pb-5 text-sm leading-relaxed text-body">{a}</p>}
     </div>
   );
 }
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-cream text-ink">
+    <div className="min-h-screen bg-page">
       {/* Nav */}
-      <nav className="sticky top-0 z-40 border-b border-ink/10 bg-cream/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
+      <header className="sticky top-0 z-40 border-b border-line bg-page/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <BrandMark size={38} />
+            <BrandMark size={34} />
             <span>
-              <span className="block font-display text-xl font-bold leading-none tracking-tight">OrderKar</span>
-              <span className="block text-[11px] font-medium text-ink-soft">Restaurant chalana ab aasaan</span>
+              <span className="block font-display text-[17px] font-extrabold leading-none tracking-tight text-ink">OrderKar</span>
+              <span className="mt-0.5 block text-[11px] font-medium leading-none text-muted">Restaurant chalana ab aasaan</span>
             </span>
           </Link>
-          <div className="hidden items-center gap-7 md:flex">
+          <nav className="ml-6 hidden items-center gap-1 md:flex">
             {NAV_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="text-sm font-medium text-ink-soft transition hover:text-pine">
+              <Link key={l.href} href={l.href} className="rounded-[10px] px-3 py-1.5 text-[13.5px] font-semibold text-muted transition hover:bg-soft hover:text-ink">
                 {l.label}
               </Link>
             ))}
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Link
-              href="/login"
-              className="hidden rounded-xl border border-ink/15 px-4 py-2 text-sm font-semibold text-ink transition hover:border-pine/50 hover:text-pine sm:inline-block"
-            >
-              Staff login
-            </Link>
-            <Link
-              href="#demo"
-              className="rounded-xl bg-pine px-4 py-2 text-sm font-bold text-cream transition hover:bg-pine-soft"
-            >
-              Try live demo
-            </Link>
+          </nav>
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+            <LinkBtn href="/login" variant="secondary" size="sm" className="hidden sm:inline-flex">Sign in</LinkBtn>
+            <LinkBtn href="#demo" size="sm">Live demo</LinkBtn>
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Hero */}
-      <section className="overflow-hidden">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-20 pt-12 sm:px-6 lg:grid-cols-2 lg:pt-20">
+      <section className="mx-auto max-w-7xl px-4 pb-16 pt-14 sm:px-6 sm:pt-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
           <div>
-            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-pine/25 bg-pine/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-pine">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-leaf" />
-              Restaurant operations software
-            </p>
-            <h1 className="font-display text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl">
-              Restaurant chalana,
-              <br />
-              <span className="text-pine">ab <span className="text-saffron-deep">aasaan.</span></span>
+            <Pill tone="brand" className="mb-5">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse-dot" />
+              Built for Pakistani dine-in restaurants
+            </Pill>
+            <h1 className="font-display text-[40px] font-extrabold leading-[1.05] tracking-tight text-ink sm:text-[56px]">
+              Restaurant chalana <span className="text-brand">ab aasaan.</span>
             </h1>
-            <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-soft">
-              OrderKar gives your restaurant QR table ordering, a live kitchen display,
-              a waiter app and a manager dashboard — one system, zero paperwork.
+            <p className="mt-5 max-w-lg text-[16.5px] leading-relaxed text-body">
+              OrderKar is the operating system for dine-in restaurants — QR table ordering,
+              a live kitchen display, waiter app, and owner analytics. One system,
+              every screen, zero chaos.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/table/1"
-                className="rounded-2xl bg-saffron px-7 py-3.5 font-bold text-pine-deep shadow-card transition hover:bg-saffron-deep"
-              >
-                Try the live demo
-              </Link>
-              <Link
-                href="/login"
-                className="rounded-2xl border border-ink/20 px-7 py-3.5 font-semibold text-ink transition hover:border-pine/60 hover:text-pine"
-              >
-                Explore staff screens
-              </Link>
+              <LinkBtn href="#demo" size="lg">Try the live demo</LinkBtn>
+              <LinkBtn href="/login" variant="secondary" size="lg">Sign in as staff</LinkBtn>
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-ink-soft">
-              <span className="flex items-center gap-2"><span className="text-leaf">✓</span> No hardware needed</span>
-              <span className="flex items-center gap-2"><span className="text-leaf">✓</span> Works on any phone</span>
-              <span className="flex items-center gap-2"><span className="text-leaf">✓</span> Live in a week</span>
+            <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
+              {[
+                ['41+', 'menu items in demo'],
+                ['5', 'role-based screens'],
+                ['0', 'apps to install'],
+              ].map(([v, l]) => (
+                <div key={l}>
+                  <p className="font-display text-2xl font-extrabold text-ink">{v}</p>
+                  <p className="text-[12.5px] text-muted">{l}</p>
+                </div>
+              ))}
             </div>
           </div>
-          <PhoneMockup />
+
+          {/* Hero visual: phone mockup + floating tickets */}
+          <div className="relative mx-auto w-full max-w-[420px]">
+            <div className="rounded-[28px] border-2 border-ink bg-surface p-3 shadow-[0_6px_0_var(--c-hard),0_30px_60px_rgba(16,40,39,0.18)]">
+              <div className="overflow-hidden rounded-[20px] border border-line bg-soft">
+                <div className="flex items-center justify-between bg-surface px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <BrandMark size={26} />
+                    <span className="font-display text-sm font-extrabold text-ink">Spice Villa</span>
+                  </div>
+                  <Pill tone="brand">Table 4</Pill>
+                </div>
+                <div className="space-y-2.5 p-4">
+                  {[
+                    ['Chicken Karahi (Half)', 'Rs 850', true],
+                    ['Chicken Biryani', 'Rs 280', true],
+                    ['Mango Shake', 'Rs 320', false],
+                    ['Cheese Naan', 'Rs 150', false],
+                  ].map(([name, price, hot]) => (
+                    <div key={name as string} className="flex items-center gap-3 rounded-[14px] border border-line bg-surface px-3.5 py-3">
+                      <div className="flex-1">
+                        <p className="text-[13.5px] font-bold text-ink">{name}</p>
+                        <p className="text-xs text-muted">{price}</p>
+                      </div>
+                      {hot ? <Pill tone="coral">Bestseller</Pill> : null}
+                      <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-brand font-display text-lg font-extrabold text-white">+</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-4 pt-0">
+                  <div className="rounded-[14px] border-2 border-ink bg-brand px-4 py-3 text-center font-display text-[15px] font-extrabold text-white shadow-[0_3px_0_var(--c-hard)]">
+                    Place order · Rs 1,600
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="absolute -left-6 top-10 hidden animate-float-soft rounded-[14px] border-2 border-ink bg-surface px-4 py-3 shadow-[0_3px_0_var(--c-hard)] sm:block">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Kitchen</p>
+              <p className="font-display text-sm font-extrabold text-ink">Order #1042 · firing</p>
+            </div>
+            <div className="absolute -right-4 bottom-16 hidden animate-float-soft rounded-[14px] border-2 border-ink bg-surface px-4 py-3 shadow-[0_3px_0_var(--c-hard)] [animation-delay:1.5s] sm:block">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Manager</p>
+              <p className="font-display text-sm font-extrabold text-ok">Rs 86,400 today</p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Stats band */}
-      <section className="bg-pine-deep">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4">
+      <section className="border-y border-line bg-soft">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-4">
           {[
-            ['4', 'screens, one system'],
-            ['41', 'dishes in the demo menu'],
-            ['0', 'hardware to buy'],
-            ['5 min', 'to learn the floor app'],
+            ['~30 sec', 'from scan to kitchen'],
+            ['6', 'tables live in demo'],
+            ['12 mo', 'of sales history'],
+            ['24/7', 'kitchen display'],
           ].map(([v, l]) => (
-            <div key={l} className="text-center lg:text-left">
-              <p className="font-display text-4xl font-bold text-saffron">{v}</p>
-              <p className="mt-1 text-sm text-cream/60">{l}</p>
+            <div key={l} className="text-center">
+              <p className="font-display text-[26px] font-extrabold tracking-tight text-ink">{v}</p>
+              <p className="mt-1 text-[12.5px] text-muted">{l}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="scroll-mt-20">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-saffron-deep">What you get</p>
-          <h2 className="mt-2 max-w-xl font-display text-4xl font-bold tracking-tight">
-            One system, four screens
-          </h2>
-          <p className="mt-3 max-w-xl text-ink-soft">
-            Every role gets exactly what it needs — nothing more, nothing missing.
-          </p>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="flex flex-col rounded-3xl border border-ink/10 bg-white p-6 shadow-card transition hover:shadow-lift">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-pine text-saffron">
-                  {f.icon}
-                </div>
-                <h3 className="mt-4 font-display text-xl font-bold">{f.title}</h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">{f.desc}</p>
-                <Link href={f.href} className="mt-5 text-sm font-bold text-pine hover:text-saffron-deep">
-                  {f.cta} →
-                </Link>
+      <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+        <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-brand">Features</p>
+        <h2 className="mt-2 max-w-xl font-display text-[30px] font-extrabold leading-tight tracking-tight text-ink sm:text-[38px]">
+          Everything the floor needs, nothing it doesn&apos;t.
+        </h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((f) => (
+            <Card key={f.title} className="group flex flex-col p-6 transition-all hover:-translate-y-1 hover:shadow-lift">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[14px] border-2 border-ink bg-brand/10 text-brand">
+                {f.icon}
               </div>
-            ))}
-          </div>
+              <h3 className="mt-4 font-display text-[17px] font-extrabold tracking-tight text-ink">{f.title}</h3>
+              <p className="mt-2 flex-1 text-[13.5px] leading-relaxed text-body">{f.desc}</p>
+              <Link href={f.href} className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-bold text-brand hover:underline">
+                {f.cta}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-6-6l6 6-6 6" /></svg>
+              </Link>
+            </Card>
+          ))}
         </div>
       </section>
 
       {/* Live demo */}
-      <section id="demo" className="scroll-mt-20 bg-pine-deep">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-saffron">Live demo</p>
-          <h2 className="mt-2 max-w-2xl font-display text-4xl font-bold tracking-tight text-cream">
-            Don&apos;t take our word for it — run the floor yourself
+      <section id="demo" className="border-y border-line bg-soft">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-brand">Live demo</p>
+          <h2 className="mt-2 max-w-xl font-display text-[30px] font-extrabold leading-tight tracking-tight text-ink sm:text-[38px]">
+            Walk the whole restaurant, right here.
           </h2>
-          <p className="mt-3 max-w-2xl text-cream/60">
-            This demo runs on sample data for <span className="font-semibold text-cream">Spice Villa</span>, Kharian.
-            Open the customer menu on your phone, the kitchen display on a second screen, and watch an order travel.
+          <p className="mt-3 max-w-2xl text-[15px] text-body">
+            Every screen below is live and connected. Place an order as a customer, then watch it
+            land on the kitchen display. Demo password for all staff accounts:{' '}
+            <code className="rounded-md bg-surface px-1.5 py-0.5 font-mono text-[13px] font-bold text-ink">demo123</code>
           </p>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {DEMOS.map((d) => (
-              <div key={d.name} className="flex flex-col rounded-3xl border border-pine-line/40 bg-pine-card p-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-saffron">{d.tag}</p>
-                <h3 className="mt-1 font-display text-2xl font-bold text-cream">{d.name}</h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-cream/60">{d.desc}</p>
-                {d.cred && (
-                  <p className="mt-3 truncate rounded-lg bg-pine-deep px-3 py-2 font-mono text-xs text-cream/70">
-                    {d.cred}
-                  </p>
-                )}
-                <Link
-                  href={d.href}
-                  className="mt-4 rounded-xl bg-saffron px-4 py-2.5 text-center text-sm font-bold text-pine-deep transition hover:bg-saffron-deep"
-                >
-                  {d.cta}
-                </Link>
-              </div>
+              <Card key={d.name} className="flex flex-col p-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display text-[17px] font-extrabold text-ink">{d.name}</h3>
+                  <Pill tone="brand">{d.tag}</Pill>
+                </div>
+                <p className="mt-2 flex-1 text-[13.5px] leading-relaxed text-body">{d.desc}</p>
+                {d.cred && <p className="mt-3 font-mono text-xs text-muted">{d.cred}</p>}
+                <div className="mt-4">
+                  <LinkBtn href={d.href} variant="secondary" size="sm" className="w-full">{d.cta}</LinkBtn>
+                </div>
+              </Card>
             ))}
+            <Card className="flex flex-col justify-center border-2 border-dashed p-6 text-center">
+              <p className="font-display text-[16px] font-extrabold text-ink">Prefer the QR way?</p>
+              <p className="mt-1.5 text-[13px] text-muted">Point your phone at a table QR — each opens that table&apos;s menu.</p>
+              <div className="mt-4">
+                <LinkBtn href="/login" size="sm">Get QR codes</LinkBtn>
+              </div>
+            </Card>
           </div>
-          <p className="mt-6 text-sm text-cream/50">
-            Staff demo password for all accounts: <code className="rounded bg-white/10 px-2 py-0.5 font-mono text-saffron">demo123</code>
-            {' '}· Customer demo needs no login.
-          </p>
         </div>
       </section>
 
       {/* How it works */}
-      <section>
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-saffron-deep">How it works</p>
-          <h2 className="mt-2 font-display text-4xl font-bold tracking-tight">From scan to served</h2>
-          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((s) => (
-              <div key={s.n} className="relative">
-                <p className="font-display text-5xl font-bold text-pine/15">{s.n}</p>
-                <h3 className="mt-2 font-semibold text-ink">{s.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{s.desc}</p>
-              </div>
-            ))}
-          </div>
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+        <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-brand">How it works</p>
+        <h2 className="mt-2 font-display text-[30px] font-extrabold tracking-tight text-ink sm:text-[38px]">Live in an afternoon.</h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {[
+            ['1', 'Add your menu', 'Enter items, prices and categories once. Print table QR codes from the dashboard.'],
+            ['2', 'Put up the screens', 'One tablet for the kitchen display, phones for waiters. Guests just use their own phones.'],
+            ['3', 'Watch it run', 'Orders flow table → kitchen → table. Owners watch revenue, rush hours and staff — live.'],
+          ].map(([n, t, d]) => (
+            <Card key={n} className="p-6">
+              <span className="flex h-10 w-10 items-center justify-center rounded-[12px] border-2 border-ink bg-ink font-display text-lg font-extrabold text-white">{n}</span>
+              <h3 className="mt-4 font-display text-[17px] font-extrabold text-ink">{t}</h3>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-body">{d}</p>
+            </Card>
+          ))}
         </div>
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="scroll-mt-20 border-t border-ink/10 bg-cream-dim/60">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-saffron-deep">Pricing</p>
-          <h2 className="mt-2 font-display text-4xl font-bold tracking-tight">Simple plans, honest prices</h2>
-          <p className="mt-3 max-w-xl text-ink-soft">Indicative pricing — final quotes depend on your branches and setup.</p>
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {PLANS.map((p) => (
-              <div
-                key={p.name}
-                className={`flex flex-col rounded-3xl border p-7 ${
-                  p.highlight
-                    ? 'border-pine bg-pine text-cream shadow-lift'
-                    : 'border-ink/10 bg-white shadow-card'
-                }`}
-              >
-                {p.highlight && (
-                  <p className="mb-3 inline-block w-fit rounded-full bg-saffron px-3 py-1 text-xs font-bold uppercase tracking-wider text-pine-deep">
-                    Most popular
-                  </p>
-                )}
-                <h3 className={`font-display text-xl font-bold ${p.highlight ? 'text-cream' : 'text-ink'}`}>{p.name}</h3>
-                <p className="mt-2">
-                  <span className={`font-display text-4xl font-bold ${p.highlight ? 'text-saffron' : 'text-pine'}`}>{p.price}</span>
-                  <span className={`text-sm ${p.highlight ? 'text-cream/60' : 'text-ink-soft'}`}> {p.per}</span>
-                </p>
-                <p className={`mt-2 text-sm ${p.highlight ? 'text-cream/70' : 'text-ink-soft'}`}>{p.desc}</p>
-                <ul className="mt-5 flex-1 space-y-2.5">
+      <section id="pricing" className="border-y border-line bg-soft">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-brand">Pricing</p>
+          <h2 className="mt-2 font-display text-[30px] font-extrabold tracking-tight text-ink sm:text-[38px]">Simple, honest pricing.</h2>
+          <p className="mt-2 text-sm text-muted">Indicative launch pricing — final plans confirmed at onboarding.</p>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {PRICING.map((p) => (
+              <Card key={p.name} className={`flex flex-col p-6 ${p.hot ? 'border-2 !border-ink shadow-[0_4px_0_var(--c-hard)]' : ''}`}>
+                {p.hot && <Pill tone="coral" className="mb-3 self-start">Most popular</Pill>}
+                <h3 className="font-display text-[17px] font-extrabold text-ink">{p.name}</h3>
+                <p className="mt-2"><span className="font-display text-[32px] font-extrabold tracking-tight text-ink">{p.price}</span><span className="text-sm text-muted"> {p.per}</span></p>
+                <p className="mt-1 text-[13px] text-muted">{p.desc}</p>
+                <ul className="mt-4 flex-1 space-y-2">
                   {p.features.map((f) => (
-                    <li key={f} className={`flex items-start gap-2 text-sm ${p.highlight ? 'text-cream/85' : 'text-ink'}`}>
-                      <span className={p.highlight ? 'text-saffron' : 'text-leaf'}>✓</span> {f}
+                    <li key={f} className="flex gap-2 text-[13.5px] text-body">
+                      <svg className="mt-0.5 shrink-0 text-ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 12.5l5 5 10-11" /></svg>
+                      {f}
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={p.href}
-                  className={`mt-6 rounded-2xl px-5 py-3 text-center font-bold transition ${
-                    p.highlight
-                      ? 'bg-saffron text-pine-deep hover:bg-saffron-deep'
-                      : 'border border-ink/15 text-ink hover:border-pine/60 hover:text-pine'
-                  }`}
-                >
-                  {p.cta}
-                </Link>
-              </div>
+                <div className="mt-6">
+                  <LinkBtn href={p.href} variant={p.hot ? 'primary' : 'secondary'} className="w-full">{p.cta}</LinkBtn>
+                </div>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="scroll-mt-20">
-        <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-saffron-deep">FAQ</p>
-          <h2 className="mt-2 font-display text-4xl font-bold tracking-tight">Common questions</h2>
-          <div className="mt-8 space-y-3">
-            {FAQS.map((f) => (
-              <details key={f.q} className="group rounded-2xl border border-ink/10 bg-white px-6 py-4 shadow-card">
-                <summary className="cursor-pointer list-none font-semibold text-ink marker:hidden [&::-webkit-details-marker]:hidden">
-                  <span className="flex items-center justify-between gap-4">
-                    {f.q}
-                    <span className="text-xl text-pine transition group-open:rotate-45">+</span>
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">{f.a}</p>
-              </details>
-            ))}
+      <section id="faq" className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+        <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-brand">FAQ</p>
+        <h2 className="mt-2 font-display text-[30px] font-extrabold tracking-tight text-ink sm:text-[38px]">Questions, answered.</h2>
+        <div className="mt-8 space-y-3">
+          {FAQS.map((f) => (
+            <FaqItem key={f.q} q={f.q} a={f.a} />
+          ))}
+        </div>
+      </section>
+
+      {/* CTA + footer */}
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
+        <div className="rounded-[24px] border-2 border-ink bg-ink px-6 py-12 text-center shadow-[0_5px_0_var(--c-hard)] sm:py-16">
+          <h2 className="mx-auto max-w-xl font-display text-[28px] font-extrabold leading-tight tracking-tight text-white sm:text-[38px]">
+            Ready to run your floor on OrderKar?
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-[15px] text-white/70">
+            Try the full live demo — customer to kitchen to owner — in the next two minutes.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <LinkBtn href="#demo" size="lg" className="!border-white">Start the demo</LinkBtn>
+            <LinkBtn href="/login" variant="secondary" size="lg">Sign in</LinkBtn>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-pine-deep">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-          <div className="grid gap-10 md:grid-cols-3">
+      <footer className="border-t border-line">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <BrandMark size={28} />
             <div>
-              <div className="flex items-center gap-2.5">
-                <BrandMark size={36} />
-                <span className="font-display text-xl font-bold text-cream">OrderKar</span>
-              </div>
-              <p className="mt-3 text-sm text-cream/55">Restaurant chalana ab aasaan.</p>
-              <p className="mt-1 text-sm text-cream/40">QR ordering · Kitchen display · Waiter app · Manager dashboard</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-cream/40">Product</p>
-              <div className="mt-3 flex flex-col gap-2">
-                {NAV_LINKS.map((l) => (
-                  <Link key={l.href} href={l.href} className="text-sm text-cream/70 transition hover:text-saffron">
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-cream/40">Live demo</p>
-              <div className="mt-3 flex flex-col gap-2">
-                <Link href="/table/1" className="text-sm text-cream/70 transition hover:text-saffron">Customer · Table 1</Link>
-                <Link href="/login" className="text-sm text-cream/70 transition hover:text-saffron">Waiter login</Link>
-                <Link href="/login" className="text-sm text-cream/70 transition hover:text-saffron">Kitchen login</Link>
-                <Link href="/login" className="text-sm text-cream/70 transition hover:text-saffron">Manager login</Link>
-              </div>
+              <p className="font-display text-sm font-extrabold text-ink">OrderKar</p>
+              <p className="text-xs text-muted">Restaurant chalana ab aasaan.</p>
             </div>
           </div>
-          <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-cream/10 pt-6 text-xs text-cream/40 sm:flex-row">
-            <p>© 2026 OrderKar · Demo restaurant: Spice Villa, Kharian</p>
-            <p>Demo data — no real orders are sent.</p>
-          </div>
+          <p className="text-[12.5px] text-muted">Demo build · Sample data for Spice Villa, Kharian · Built by KoDrift Dev</p>
         </div>
       </footer>
     </div>

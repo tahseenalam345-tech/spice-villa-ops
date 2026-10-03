@@ -5,12 +5,12 @@
 //
 // Demo restaurant: Spice Villa (Kharian-style Pakistani restaurant).
 // Bundled seed data + browser localStorage persistence. Zero backend required.
-// The schema mirrors /supabase/schema.sql so a real Supabase backend can be
-// wired later without changing the UI code.
 //
-// Cross-tab realtime: every mutation writes localStorage (fires 'storage'
-// events in other tabs) AND dispatches window CustomEvent('orderkar-db-update').
-// Pages use useLiveDb() which subscribes to both and polls every 5s.
+// Seed model (DB_KEY orderkar_db_v2):
+//   - Full Order objects for the last 45 days (live screens + recent analytics)
+//   - Compact DailySummary rows for days 46..365 (12-month analytics)
+//   - Reviews + waste logs spread across 12 months
+// Cross-tab realtime via 'storage' events + 'orderkar-db-update' CustomEvent.
 // ---------------------------------------------------------------------------
 
 import { useEffect, useState } from 'react';
@@ -77,6 +77,7 @@ export interface Order {
   waiter_id?: string;
   customer_name?: string;
   customer_phone?: string;
+  covers?: number;
   status: OrderStatus;
   total_amount: number;
   notes?: string;
@@ -113,8 +114,23 @@ export interface Review {
   order_id: string;
   rating: number; // 1..5
   comment?: string;
+  customer_name?: string;
   customer_phone?: string;
   created_at: string;
+}
+
+/** Compact per-day aggregates for days 46..365 (keeps localStorage small). */
+export interface DailySummary {
+  date: string; // YYYY-MM-DD
+  weekday: number; // 0=Sun..6=Sat
+  orders: number;
+  revenue: number;
+  covers: number;
+  items: Record<string, number>; // menu_item_id -> qty sold
+  hours: number[]; // 24 buckets
+  waiters: Record<string, number>; // waiter_id -> orders served
+  prep_minutes_sum: number;
+  completed_count: number;
 }
 
 export interface DBState {
@@ -126,12 +142,13 @@ export interface DBState {
   categories: MenuCategory[];
   items: MenuItem[];
   orders: Order[];
+  summaries: DailySummary[];
   users: StaffUser[];
   wasteLogs: WasteLog[];
   reviews: Review[];
 }
 
-export const DB_KEY = 'orderkar_db_v1';
+export const DB_KEY = 'orderkar_db_v2';
 const UPDATE_EVENT = 'orderkar-db-update';
 
 const uid = (): string =>
@@ -154,8 +171,43 @@ const IMG_NAAN = img('1567337710282-00832b415979');
 const IMG_CHAI = img('1571934811356-5cc061b6821f');
 
 // ---------------------------------------------------------------------------
+// Seeded RNG (deterministic history, fast)
+// ---------------------------------------------------------------------------
+
+function mulberry32(seedNum: number): () => number {
+  let a = seedNum >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Seed
 // ---------------------------------------------------------------------------
+
+const REVIEW_COMMENTS = [
+  'Biryani was on point — masala perfect, rice fluffy. Will come again!',
+  'Karahi had great flavour. Service was a little slow at peak time.',
+  'Best BBQ platter in Kharian, hands down. Seekh kebab melted in the mouth.',
+  'Clean place, quick service. Kids loved the loaded fries.',
+  'Malai boti is a must-try. Creamy and smoky at the same time.',
+  'Good value family dinner. Kashmiri chai at the end was perfect.',
+  'Zinger was crispy and fresh. Will order again.',
+  'Mutton karahi took a while but worth the wait.',
+  'Nice ambience for GT Road. Kulfi falooda stole the show.',
+  'Doodh patti like a proper dhaba. Five stars.',
+  'Cheese naan with chicken handi — deadly combo.',
+  'Staff was courteous, food arrived hot. Recommended.',
+];
+
+const CUSTOMER_NAMES = [
+  'Ahmed', 'Fatima', 'Hassan', 'Ayesha', 'Bilal', 'Sana', 'Usman', 'Maryam',
+  'Danish', 'Hira', 'Imran', 'Sadia', 'Kamran', 'Nadia', 'Fahad', 'Rabia',
+];
 
 function seed(): DBState {
   const restaurant: Restaurant = {
@@ -239,12 +291,210 @@ function seed(): DBState {
   ];
 
   const users: StaffUser[] = [
+    { id: 'user_owner', restaurant_id: restaurant.id, email: 'owner@orderkar.pk', password: 'demo123', role: 'owner', name: 'Tahseen Alam', phone: '0300-0000001', is_active: true },
     { id: 'user_manager', restaurant_id: restaurant.id, email: 'manager@orderkar.pk', password: 'demo123', role: 'manager', name: 'Ali Raza', phone: '0300-1234567', is_active: true },
     { id: 'user_kitchen', restaurant_id: restaurant.id, email: 'kitchen@orderkar.pk', password: 'demo123', role: 'kitchen', name: 'Bilal Ahmed', phone: '0300-2345678', is_active: true },
     { id: 'user_waiter', restaurant_id: restaurant.id, email: 'waiter@orderkar.pk', password: 'demo123', role: 'waiter', name: 'Usman Tariq', phone: '0300-3456789', is_active: true },
+    { id: 'user_waiter2', restaurant_id: restaurant.id, email: 'danish@orderkar.pk', password: 'demo123', role: 'waiter', name: 'Danish Ali', phone: '0300-4567890', is_active: true },
   ];
 
-  // Demo orders for today so every screen has live data on first open.
+  // ------------------------------------------------------------------
+  // 12-month history. Full orders for days 1..45, compact DailySummary
+  // rows for days 46..365. Day 0 (today) keeps the handcrafted live
+  // demo orders below.
+  // ------------------------------------------------------------------
+  const rng = mulberry32(20261003);
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(rng() * arr.length)];
+
+  // Weighted item picker — bestsellers sell ~3x.
+  const itemPool: MenuItem[] = [];
+  for (const m of items) {
+    const w = m.tags?.includes('bestseller') ? 3 : 1;
+    for (let k = 0; k < w; k++) itemPool.push(m);
+  }
+
+  const HOUR_W: Record<number, number> = {
+    0: 0.4, 11: 0.7, 12: 3, 13: 3, 14: 2.5, 15: 1.5, 16: 1.2, 17: 1.2,
+    18: 1.8, 19: 4, 20: 4, 21: 3.5, 22: 2.5, 23: 1.2,
+  };
+  const hourWeight = (h: number): number => HOUR_W[h] ?? 0.08;
+  const pickHour = (): number => {
+    let total = 0;
+    for (let h = 0; h < 24; h++) total += hourWeight(h);
+    let r = rng() * total;
+    for (let h = 0; h < 24; h++) {
+      r -= hourWeight(h);
+      if (r <= 0) return h;
+    }
+    return 19;
+  };
+
+  const weeklyMult = (wd: number): number =>
+    wd === 5 || wd === 0 ? 1.8 : wd === 6 ? 1.6 : wd === 4 ? 1.2 : 0.85;
+
+  const pickCovers = (): number => {
+    const r = rng();
+    if (r < 0.1) return 1;
+    if (r < 0.4) return 2;
+    if (r < 0.6) return 3;
+    if (r < 0.85) return 4;
+    if (r < 0.95) return 5;
+    return 6;
+  };
+
+  const mkHistItems = (orderId: string, created: Date): { items: OrderItem[]; total: number; prep: number } => {
+    const lines = 1 + Math.floor(rng() * 3);
+    const orderItems: OrderItem[] = [];
+    let total = 0;
+    let prep = 0;
+    for (let k = 0; k < lines; k++) {
+      const m = pick(itemPool);
+      const qty = m.category_id === 'cat_breads' ? 2 + Math.floor(rng() * 4) : 1 + Math.floor(rng() * 2);
+      total += m.price * qty;
+      prep = Math.max(prep, m.prep_time_minutes);
+      orderItems.push({
+        id: `hi_${orderId}_${k}`,
+        order_id: orderId,
+        menu_item_id: m.id,
+        item_name: m.name,
+        quantity: qty,
+        unit_price: m.price,
+        status: 'ready',
+      });
+    }
+    void created;
+    return { items: orderItems, total, prep: Math.round(prep * (0.8 + rng() * 0.5)) };
+  };
+
+  const histOrders: Order[] = [];
+  const summaries: DailySummary[] = [];
+  const wasteLogs: WasteLog[] = [];
+  const reviews: Review[] = [];
+  let orderNum = 2000;
+
+  const now = new Date();
+  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // Emits one historical order into either the full-order list or a summary.
+  const emitHistOrder = (
+    day: Date,
+    d: number,
+    i: number,
+    hour: number,
+    sum: DailySummary | null,
+  ): void => {
+    const minute = Math.floor(rng() * 60);
+    const created = new Date(day.getTime() + hour * 3600000 + minute * 60000);
+    const tableNum = 1 + Math.floor(rng() * 6);
+    const waiter = rng() < 0.55 ? 'user_waiter' : 'user_waiter2';
+    const covers = pickCovers();
+    const orderId = `hist_${d}_${i}`;
+    const { items: oItems, total, prep } = mkHistItems(orderId, created);
+    const updated = new Date(created.getTime() + prep * 60000);
+    orderNum += 1;
+
+    if (sum === null) {
+      histOrders.push({
+        id: orderId,
+        order_number: orderNum,
+        restaurant_id: restaurant.id,
+        table_id: `table_${tableNum}`,
+        waiter_id: waiter,
+        customer_name: pick(CUSTOMER_NAMES),
+        covers,
+        status: 'completed',
+        total_amount: total,
+        created_at: created.toISOString(),
+        updated_at: updated.toISOString(),
+        items: oItems,
+      });
+    } else {
+      sum.orders += 1;
+      sum.revenue += total;
+      sum.covers += covers;
+      sum.hours[hour] += 1;
+      sum.waiters[waiter] = (sum.waiters[waiter] ?? 0) + 1;
+      sum.prep_minutes_sum += prep;
+      sum.completed_count += 1;
+      for (const li of oItems) sum.items[li.menu_item_id] = (sum.items[li.menu_item_id] ?? 0) + li.quantity;
+    }
+  };
+
+  const blankSummary = (day: Date, wd: number): DailySummary => ({
+    date: day.toISOString().slice(0, 10),
+    weekday: wd,
+    orders: 0,
+    revenue: 0,
+    covers: 0,
+    items: {},
+    hours: new Array<number>(24).fill(0),
+    waiters: {},
+    prep_minutes_sum: 0,
+    completed_count: 0,
+  });
+
+  for (let d = 1; d <= 365; d++) {
+    const day = new Date(dayStart.getTime() - d * 86400000);
+    const wd = day.getDay();
+    const nOrders = Math.max(4, Math.round(26 * weeklyMult(wd) * (0.85 + rng() * 0.3)));
+    const full = d <= 45;
+    const sum: DailySummary = blankSummary(day, wd);
+
+    for (let i = 0; i < nOrders; i++) {
+      emitHistOrder(day, d, i, pickHour(), full ? null : sum);
+    }
+    if (!full) summaries.push(sum);
+
+    // ~1 review every 3 days
+    if (rng() < 0.34) {
+      const r = rng();
+      const rating = r < 0.45 ? 5 : r < 0.75 ? 4 : r < 0.9 ? 3 : r < 0.97 ? 2 : 1;
+      const created = new Date(day.getTime() + (12 + Math.floor(rng() * 10)) * 3600000);
+      reviews.push({
+        id: `hrev_${d}`,
+        order_id: `hist_${d}_0`,
+        rating,
+        comment: rating >= 4 ? pick(REVIEW_COMMENTS) : undefined,
+        customer_name: pick(CUSTOMER_NAMES),
+        created_at: created.toISOString(),
+      });
+    }
+
+    // occasional waste log (~8% of days)
+    if (rng() < 0.08) {
+      const m = pick(items);
+      const qty = 1 + Math.floor(rng() * 5);
+      wasteLogs.push({
+        id: `hwaste_${d}`,
+        restaurant_id: restaurant.id,
+        menu_item_id: m.id,
+        item_name: m.name,
+        quantity: qty,
+        reason: pick(['spoilage', 'overprep', 'spoilage', 'overprep', 'other'] as WasteReason[]),
+        logged_by: 'Ali Raza',
+        logged_at: new Date(day.getTime() + 22 * 3600000).toISOString(),
+        estimated_cost: Math.round(m.price * qty * 0.6),
+      });
+    }
+  }
+
+  // Today's earlier hours (before the live demo window): completed orders so
+  // "today" analytics look like a real trading day, not just the 6 live demos.
+  {
+    const nowH = now.getHours();
+    const cutoffH = nowH - 6;
+    if (cutoffH > 0) {
+      const wd = dayStart.getDay();
+      const nEarly = Math.max(3, Math.round(26 * weeklyMult(wd) * (cutoffH / 24) * 1.7));
+      for (let i = 0; i < nEarly; i++) {
+        emitHistOrder(dayStart, 0, i, Math.floor(rng() * cutoffH), null);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Today's live demo orders (interactive — keep as-is).
+  // ---------------------------------------------------------------
   const mkItems = (orderId: string, lines: [string, number][], status: OrderItemStatus, note?: string): OrderItem[] =>
     lines.map(([itemId, qty]) => {
       const m = items.find((x) => x.id === itemId);
@@ -282,16 +532,18 @@ function seed(): DBState {
     };
   };
 
-  const orders: Order[] = [
-    mkOrder(1, 3, 'completed', 'ready', [['item_chicken_biryani', 2], ['item_doodh_patti', 2]], 300, { customer_name: 'Ahmed' }),
-    mkOrder(2, 5, 'completed', 'ready', [['item_chicken_karahi_half', 1], ['item_roghni_naan', 4]], 180, { customer_name: 'Fatima' }),
-    mkOrder(3, 2, 'completed', 'ready', [['item_beef_biryani', 2], ['item_lime_soda', 1]], 90, { customer_name: 'Hassan' }),
-    mkOrder(4, 1, 'ready', 'ready', [['item_bbq_platter', 1], ['item_mango_shake', 2]], 25, { customer_name: 'Ayesha' }),
-    mkOrder(5, 4, 'preparing', 'preparing', [['item_mutton_karahi_half', 1], ['item_garlic_naan', 2]], 12, { customer_name: 'Bilal', waiter_id: 'user_waiter' }),
-    mkOrder(6, 6, 'pending', 'pending', [['item_chicken_tikka', 2], ['item_mint_margarita', 2]], 3, { notes: 'One tikka extra spicy' }),
+  const demoOrders: Order[] = [
+    mkOrder(1, 3, 'completed', 'ready', [['item_chicken_biryani', 2], ['item_doodh_patti', 2]], 300, { customer_name: 'Ahmed', covers: 2 }),
+    mkOrder(2, 5, 'completed', 'ready', [['item_chicken_karahi_half', 1], ['item_roghni_naan', 4]], 180, { customer_name: 'Fatima', covers: 4 }),
+    mkOrder(3, 2, 'completed', 'ready', [['item_beef_biryani', 2], ['item_lime_soda', 1]], 90, { customer_name: 'Hassan', covers: 2 }),
+    mkOrder(4, 1, 'ready', 'ready', [['item_bbq_platter', 1], ['item_mango_shake', 2]], 25, { customer_name: 'Ayesha', covers: 3 }),
+    mkOrder(5, 4, 'preparing', 'preparing', [['item_mutton_karahi_half', 1], ['item_garlic_naan', 2]], 12, { customer_name: 'Bilal', waiter_id: 'user_waiter', covers: 2 }),
+    mkOrder(6, 6, 'pending', 'pending', [['item_chicken_tikka', 2], ['item_mint_margarita', 2]], 3, { notes: 'One tikka extra spicy', covers: 2 }),
   ];
 
-  const wasteLogs: WasteLog[] = [
+  const allOrders = [...demoOrders, ...histOrders];
+
+  const seedWaste: WasteLog[] = [
     {
       id: 'waste_1', restaurant_id: restaurant.id, menu_item_id: 'item_chicken_tikka',
       item_name: 'Chicken Tikka', quantity: 4, reason: 'overprep',
@@ -299,23 +551,24 @@ function seed(): DBState {
     },
   ];
 
-  const reviews: Review[] = [
-    { id: 'rev_1', order_id: 'seed_order_1', rating: 5, comment: 'Biryani was on point — masala perfect, rice fluffy. Will come again!', created_at: isoMinsAgo(240) },
-    { id: 'rev_2', order_id: 'seed_order_2', rating: 4, comment: 'Karahi had great flavour. Service was a little slow at peak time.', created_at: isoMinsAgo(120) },
+  const seedReviews: Review[] = [
+    { id: 'rev_1', order_id: 'seed_order_1', rating: 5, comment: REVIEW_COMMENTS[0], customer_name: 'Ahmed', created_at: isoMinsAgo(240) },
+    { id: 'rev_2', order_id: 'seed_order_2', rating: 4, comment: REVIEW_COMMENTS[1], customer_name: 'Fatima', created_at: isoMinsAgo(120) },
   ];
 
   return {
     version: 1,
     revision: 0,
-    seq: 1006,
+    seq: orderNum,
     restaurant,
     tables,
     categories,
     items,
-    orders,
+    orders: allOrders,
+    summaries,
     users,
-    wasteLogs,
-    reviews,
+    wasteLogs: [...seedWaste, ...wasteLogs],
+    reviews: [...seedReviews, ...reviews],
   };
 }
 
@@ -329,7 +582,13 @@ export function loadDB(): DBState {
     const raw = window.localStorage.getItem(DB_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as DBState;
-      if (parsed && parsed.version === 1 && Array.isArray(parsed.orders) && Array.isArray(parsed.items)) {
+      if (
+        parsed &&
+        parsed.version === 1 &&
+        Array.isArray(parsed.orders) &&
+        Array.isArray(parsed.items) &&
+        Array.isArray(parsed.summaries)
+      ) {
         return parsed;
       }
     }
@@ -453,6 +712,7 @@ export interface CreateOrderInput {
   items: { menu_item_id: string; quantity: number; notes?: string }[];
   customer_name?: string;
   customer_phone?: string;
+  covers?: number;
   notes?: string;
   waiter_id?: string;
 }
@@ -484,6 +744,7 @@ export function createOrder(input: CreateOrderInput): Order {
       waiter_id: input.waiter_id,
       customer_name: input.customer_name || undefined,
       customer_phone: input.customer_phone || undefined,
+      covers: input.covers,
       status: 'pending',
       total_amount: orderItems.reduce((s, i) => s + i.unit_price * i.quantity, 0),
       notes: input.notes || undefined,
@@ -568,6 +829,7 @@ export interface AddReviewInput {
   order_id: string;
   rating: number;
   comment?: string;
+  customer_name?: string;
   customer_phone?: string;
 }
 
@@ -579,6 +841,7 @@ export function addReview(input: AddReviewInput): Review {
       order_id: input.order_id,
       rating: Math.min(5, Math.max(1, Math.round(input.rating))),
       comment: input.comment || undefined,
+      customer_name: input.customer_name || undefined,
       customer_phone: input.customer_phone || undefined,
       created_at: new Date().toISOString(),
     };
@@ -602,7 +865,7 @@ export function setItemAvailability(itemId: string, isAvailable: boolean): void 
 }
 
 // ---------------------------------------------------------------------------
-// Analytics
+// Analytics (backwards-compatible dashboard helpers)
 // ---------------------------------------------------------------------------
 
 export interface DashboardStats {
