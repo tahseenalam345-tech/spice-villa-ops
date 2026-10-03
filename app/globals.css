@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-[#16130E] text-[#FAF6EE] antialiased;
+}
+
+::selection {
+  background: #e9a13b;
+  color: #16130e;
+}
+
+/* Slim scrollbars for tab rails and drawers */
+*::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(233, 161, 59, 0.35);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes flash-new {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(233, 161, 59, 0);
+  }
+  25%,
+  75% {
+    box-shadow: 0 0 0 4px rgba(233, 161, 59, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(233, 161, 59, 0.4);
+  }
+}
+
+.animate-flash-new {
+  animation: flash-new 1.2s ease-in-out 3;
+}
