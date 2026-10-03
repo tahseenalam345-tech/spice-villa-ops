@@ -11,6 +11,7 @@ import {
   type Order,
 } from '@/lib/db';
 import { pkr } from '@/lib/format';
+import { Btn, Input, Pill, Textarea } from './ui';
 import DishImage from './DishImage';
 
 interface MenuOrderProps {
@@ -18,49 +19,29 @@ interface MenuOrderProps {
   mode: 'customer' | 'waiter';
   waiterId?: string;
   onOrderPlaced?: (order: Order) => void;
-  /** Dark pine theme for staff screens; light cream theme for customers. */
-  dark?: boolean;
 }
 
-function Stepper({
-  qty,
-  onChange,
-  disabled,
-  dark,
-}: {
-  qty: number;
-  onChange: (qty: number) => void;
-  disabled?: boolean;
-  dark?: boolean;
-}) {
+function Stepper({ qty, onChange, disabled }: { qty: number; onChange: (qty: number) => void; disabled?: boolean }) {
   if (qty === 0) {
     return (
-      <button
-        disabled={disabled}
-        onClick={() => onChange(1)}
-        className="rounded-xl bg-saffron px-5 py-2 text-sm font-bold text-pine-deep transition hover:bg-saffron-deep disabled:cursor-not-allowed disabled:opacity-30"
-      >
+      <Btn size="sm" disabled={disabled} onClick={() => onChange(1)} className="px-5">
         ADD
-      </button>
+      </Btn>
     );
   }
   return (
-    <div
-      className={`flex items-center gap-3 rounded-xl border px-2 py-1 ${
-        dark ? 'border-saffron/50 bg-saffron/10' : 'border-saffron-deep/40 bg-saffron/10'
-      }`}
-    >
+    <div className="flex items-center gap-2.5 rounded-[12px] border-2 border-ink bg-surface px-1.5 py-1 shadow-[0_2px_0_var(--c-hard)]">
       <button
         onClick={() => onChange(qty - 1)}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-xl font-bold text-saffron-deep transition hover:bg-saffron/25"
+        className="flex h-8 w-8 items-center justify-center rounded-[8px] text-xl font-extrabold text-ink transition hover:bg-soft"
         aria-label="Decrease quantity"
       >
         −
       </button>
-      <span className={`min-w-6 text-center font-bold ${dark ? 'text-cream' : 'text-ink'}`}>{qty}</span>
+      <span className="min-w-5 text-center font-display text-[15px] font-extrabold text-ink">{qty}</span>
       <button
         onClick={() => onChange(qty + 1)}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-xl font-bold text-saffron-deep transition hover:bg-saffron/25"
+        className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-ink text-xl font-extrabold text-white transition hover:bg-brand"
         aria-label="Increase quantity"
       >
         +
@@ -70,28 +51,12 @@ function Stepper({
 }
 
 function TagBadge({ tag }: { tag: MenuTag }) {
-  if (tag === 'bestseller') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-saffron/20 px-2 py-0.5 text-[11px] font-bold text-[#9A6204]">
-        ★ Bestseller
-      </span>
-    );
-  }
-  if (tag === 'spicy') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-chili/10 px-2 py-0.5 text-[11px] font-bold text-chili">
-        <span className="h-1.5 w-1.5 rounded-full bg-chili" /> Spicy
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-leaf/15 px-2 py-0.5 text-[11px] font-bold text-leaf-deep">
-      <span className="h-1.5 w-1.5 rounded-full bg-leaf" /> Veg
-    </span>
-  );
+  if (tag === 'bestseller') return <Pill tone="coral">★ Bestseller</Pill>;
+  if (tag === 'spicy') return <Pill tone="danger">Spicy</Pill>;
+  return <Pill tone="ok">Veg</Pill>;
 }
 
-export default function MenuOrder({ tableId, mode, waiterId, onOrderPlaced, dark = false }: MenuOrderProps) {
+export default function MenuOrder({ tableId, mode, waiterId, onOrderPlaced }: MenuOrderProps) {
   const db = useLiveDb();
   const menu = useMemo(() => getMenu(db), [db]);
   const tNo = tableNumber(db, tableId);
@@ -150,31 +115,19 @@ export default function MenuOrder({ tableId, mode, waiterId, onOrderPlaced, dark
     }
   };
 
-  const inputCls = dark
-    ? 'w-full rounded-xl border border-cream/10 bg-white/[0.05] px-4 py-3 text-sm text-cream placeholder:text-cream/30 focus:border-saffron/60 focus:outline-none'
-    : 'w-full rounded-xl border border-ink/10 bg-cream px-4 py-3 text-sm text-ink placeholder:text-ink-faint focus:border-pine/50 focus:outline-none';
-
   return (
     <div>
       {/* Category tabs */}
-      <div
-        className={`sticky top-0 z-20 -mx-4 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 ${
-          dark ? 'bg-pine-deep/95' : 'bg-cream/95'
-        }`}
-      >
+      <div className="sticky top-0 z-20 -mx-4 bg-page/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex gap-2 overflow-x-auto pb-1">
           {menu.map((c) => (
             <button
               key={c.id}
               onClick={() => setActiveCat(c.id)}
-              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
+              className={`whitespace-nowrap rounded-[12px] border-2 px-4 py-2 text-[13px] font-bold transition-all ${
                 currentCat === c.id
-                  ? dark
-                    ? 'bg-saffron text-pine-deep'
-                    : 'bg-pine text-cream'
-                  : dark
-                    ? 'border border-cream/15 text-cream/70 hover:border-saffron/50'
-                    : 'border border-ink/15 text-ink-soft hover:border-pine/50'
+                  ? 'border-ink bg-ink text-white shadow-[0_3px_0_var(--c-hard)]'
+                  : 'border-line bg-surface text-muted hover:border-ink/40 hover:text-ink'
               }`}
             >
               {c.name}
@@ -191,19 +144,13 @@ export default function MenuOrder({ tableId, mode, waiterId, onOrderPlaced, dark
           .map((item) => (
             <div
               key={item.id}
-              className={`flex gap-4 rounded-2xl border p-3 shadow-card ${
-                dark
-                  ? 'border-pine-line/40 bg-pine-card'
-                  : 'border-ink/10 bg-white'
-              } ${!item.is_available ? 'opacity-50' : ''}`}
+              className={`flex gap-3.5 rounded-card border border-line bg-surface p-3 shadow-card ${!item.is_available ? 'opacity-50' : ''}`}
             >
-              <DishImage src={item.image_url} alt={item.name} className="h-24 w-24 shrink-0 rounded-xl" />
+              <DishImage src={item.image_url} alt={item.name} className="h-24 w-24 shrink-0 rounded-[12px]" />
               <div className="flex min-w-0 flex-1 flex-col">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <p className={`font-medium leading-snug ${dark ? 'text-cream' : 'text-ink'}`}>
-                    {item.name}
-                  </p>
-                </div>
+                <p className="font-display text-[15px] font-extrabold leading-snug tracking-tight text-ink">
+                  {item.name}
+                </p>
                 {(item.tags?.length ?? 0) > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {item.tags!.map((t) => (
@@ -211,25 +158,13 @@ export default function MenuOrder({ tableId, mode, waiterId, onOrderPlaced, dark
                     ))}
                   </div>
                 )}
-                <p
-                  className={`mt-0.5 line-clamp-2 text-[13px] leading-snug ${
-                    dark ? 'text-cream/55' : 'text-ink-soft'
-                  }`}
-                >
-                  {item.description}
-                </p>
+                <p className="mt-1 line-clamp-2 text-[12.5px] leading-snug text-muted">{item.description}</p>
                 <div className="mt-auto flex items-center justify-between pt-2">
-                  <span className={`font-display text-lg font-semibold ${dark ? 'text-saffron' : 'text-pine'}`}>
-                    {pkr(item.price)}
-                  </span>
+                  <span className="font-display text-[17px] font-extrabold text-ink">{pkr(item.price)}</span>
                   {item.is_available ? (
-                    <Stepper qty={cart[item.id] ?? 0} onChange={(q) => setQty(item.id, q)} dark={dark} />
+                    <Stepper qty={cart[item.id] ?? 0} onChange={(q) => setQty(item.id, q)} />
                   ) : (
-                    <span
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                        dark ? 'bg-white/5 text-cream/40' : 'bg-ink/5 text-ink-faint'
-                      }`}
-                    >
+                    <span className="rounded-[10px] bg-soft px-3 py-1.5 text-xs font-semibold text-muted">
                       Unavailable
                     </span>
                   )}
@@ -244,23 +179,15 @@ export default function MenuOrder({ tableId, mode, waiterId, onOrderPlaced, dark
         <div className="pointer-events-none fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
           <button
             onClick={() => setDrawerOpen(true)}
-            className={`pointer-events-auto flex w-full max-w-md items-center justify-between rounded-2xl px-5 py-4 font-bold shadow-lift transition ${
-              dark
-                ? 'bg-saffron text-pine-deep hover:bg-saffron-deep'
-                : 'bg-pine text-cream hover:bg-pine-soft'
-            }`}
+            className="pointer-events-auto flex w-full max-w-md items-center justify-between rounded-[16px] border-2 border-ink bg-brand px-5 py-4 font-display font-extrabold text-white shadow-[0_4px_0_var(--c-hard)] transition-all hover:-translate-y-px hover:shadow-[0_5px_0_var(--c-hard)] active:translate-y-[2px] active:shadow-[0_1px_0_var(--c-hard)]"
           >
-            <span className="flex items-center gap-2">
-              <span
-                className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs ${
-                  dark ? 'bg-pine-deep text-saffron' : 'bg-saffron text-pine-deep'
-                }`}
-              >
+            <span className="flex items-center gap-2.5 text-[15px]">
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-white px-1.5 text-xs font-extrabold text-brand">
                 {cartCount}
               </span>
               View cart {tNo ? `· Table ${tNo}` : ''}
             </span>
-            <span>{pkr(cartTotal)}</span>
+            <span className="text-[15px]">{pkr(cartTotal)}</span>
           </button>
         </div>
       )}
@@ -268,86 +195,67 @@ export default function MenuOrder({ tableId, mode, waiterId, onOrderPlaced, dark
       {/* Cart drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-black/70" onClick={() => setDrawerOpen(false)} />
-          <div
-            className={`absolute inset-x-0 bottom-0 mx-auto max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border-t p-5 pb-8 ${
-              dark ? 'border-pine-line/40 bg-pine-card' : 'border-ink/10 bg-white'
-            }`}
-          >
-            <div className={`mx-auto mb-4 h-1.5 w-12 rounded-full ${dark ? 'bg-cream/20' : 'bg-ink/15'}`} />
+          <div className="absolute inset-0 bg-black/60" onClick={() => setDrawerOpen(false)} />
+          <div className="absolute inset-x-0 bottom-0 mx-auto max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-[24px] border-2 border-b-0 border-ink bg-surface p-5 pb-8">
+            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-line" />
             <div className="mb-4 flex items-center justify-between">
-              <h2 className={`font-display text-xl font-semibold ${dark ? 'text-cream' : 'text-ink'}`}>
+              <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">
                 Your order {tNo ? `· Table ${tNo}` : ''}
               </h2>
               <button
                 onClick={() => setDrawerOpen(false)}
-                className={`rounded-lg px-2 py-1 text-2xl leading-none transition ${
-                  dark ? 'text-cream/60 hover:text-cream' : 'text-ink-soft hover:text-ink'
-                }`}
+                className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-line text-xl leading-none text-muted transition hover:border-ink/40 hover:text-ink"
                 aria-label="Close cart"
               >
                 ×
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {cartLines.map(({ item, qty }) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 rounded-xl p-3 ${
-                    dark ? 'bg-white/[0.05]' : 'bg-cream'
-                  }`}
-                >
-                  <DishImage src={item.image_url} alt={item.name} className="h-14 w-14 shrink-0 rounded-lg" />
+                <div key={item.id} className="flex items-center gap-3 rounded-[14px] border border-line bg-soft/70 p-3">
+                  <DishImage src={item.image_url} alt={item.name} className="h-14 w-14 shrink-0 rounded-[10px]" />
                   <div className="min-w-0 flex-1">
-                    <p className={`truncate text-sm font-medium ${dark ? 'text-cream' : 'text-ink'}`}>
-                      {item.name}
-                    </p>
-                    <p className={`text-sm ${dark ? 'text-saffron' : 'text-pine'}`}>
-                      {pkr(item.price * qty)}
-                    </p>
+                    <p className="truncate text-sm font-bold text-ink">{item.name}</p>
+                    <p className="text-sm font-extrabold text-brand">{pkr(item.price * qty)}</p>
                   </div>
-                  <Stepper qty={qty} onChange={(q) => setQty(item.id, q)} dark={dark} />
+                  <Stepper qty={qty} onChange={(q) => setQty(item.id, q)} />
                 </div>
               ))}
             </div>
 
             <div className="mt-4 space-y-3">
-              <input
+              <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={mode === 'waiter' ? 'Customer name' : 'Your name (optional)'}
-                className={inputCls}
               />
               {mode === 'customer' && (
-                <input
+                <Input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Phone number (optional)"
                   inputMode="tel"
-                  className={inputCls}
                 />
               )}
-              <textarea
+              <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Special instructions (e.g. less spicy, no onion)…"
                 rows={2}
-                className={`${inputCls} resize-none`}
+                className="resize-none"
               />
             </div>
 
-            {error && <p className="mt-3 text-sm text-chili">{error}</p>}
+            {error && <p className="mt-3 text-sm font-medium text-danger">{error}</p>}
 
-            <button
-              onClick={placeOrder}
-              disabled={placing || cartLines.length === 0}
-              className="mt-4 flex w-full items-center justify-between rounded-2xl bg-saffron px-5 py-4 font-bold text-pine-deep transition hover:bg-saffron-deep disabled:opacity-40"
-            >
-              <span>{placing ? 'Placing order…' : 'Place order'}</span>
-              <span>{pkr(cartTotal)}</span>
-            </button>
-            <p className={`mt-3 text-center text-xs ${dark ? 'text-cream/40' : 'text-ink-faint'}`}>
+            <Btn onClick={placeOrder} disabled={placing || cartLines.length === 0} size="lg" className="mt-4 w-full">
+              <span className="flex w-full items-center justify-between">
+                <span>{placing ? 'Placing order…' : 'Place order'}</span>
+                <span>{pkr(cartTotal)}</span>
+              </span>
+            </Btn>
+            <p className="mt-3 text-center text-xs text-muted">
               {mode === 'waiter' ? 'Order goes straight to the kitchen display.' : 'The kitchen will start preparing right away.'}
             </p>
           </div>

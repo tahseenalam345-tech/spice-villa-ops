@@ -11,7 +11,7 @@ import {
   type Order,
 } from '@/lib/db';
 import { fmtAgo, fmtTime, pkr } from '@/lib/format';
-import TopBar from '@/components/TopBar';
+import { AppHeader, Btn, Card, Empty, SectionHead } from '@/components/ui';
 import StatusPill from '@/components/StatusPill';
 import MenuOrder from '@/components/MenuOrder';
 
@@ -34,10 +34,6 @@ function WaiterApp() {
     return getOrdersToday(db).filter((o) => o.table_id === selectedTable.id);
   }, [db, selectedTable]);
 
-  const handlePlaced = (order: Order) => {
-    setJustPlaced(order.id);
-  };
-
   const completeOrder = () => {
     if (!activeOrder) return;
     updateOrderStatus(activeOrder.id, 'completed');
@@ -45,13 +41,12 @@ function WaiterApp() {
   };
 
   return (
-    <div className="min-h-screen bg-pine-deep text-cream">
-      <TopBar title="Waiter" subtitle="Tableside ordering" />
+    <div className="min-h-screen bg-page">
+      <AppHeader title="Waiter" subtitle="Tableside ordering" active="/waiter" />
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        {/* Table grid */}
-        <h2 className="font-display text-xl font-bold">Tables</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <SectionHead title="Tables" sub="Tap a table to take an order or manage its running bill" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {tables.map((t) => {
             const active = tableActiveOrder(db, t.id);
             const isSel = selected === t.id;
@@ -62,25 +57,27 @@ function WaiterApp() {
                   setSelected(t.id);
                   setJustPlaced(null);
                 }}
-                className={`rounded-2xl border p-4 text-left transition ${
+                className={`rounded-card border-2 p-4 text-left transition-all duration-150 ${
                   isSel
-                    ? 'border-saffron bg-saffron/10'
-                    : 'border-pine-line/40 bg-pine-card hover:border-cream/25'
+                    ? 'border-ink bg-ink text-white shadow-[0_3px_0_var(--c-hard)]'
+                    : 'border-line bg-surface hover:-translate-y-px hover:border-ink/40 hover:shadow-card'
                 }`}
               >
-                <p className="font-display text-lg font-bold">Table {t.table_number}</p>
+                <p className={`font-display text-[17px] font-extrabold tracking-tight ${isSel ? 'text-white' : 'text-ink'}`}>
+                  Table {t.table_number}
+                </p>
                 {active ? (
                   <div className="mt-1.5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-saffron">
+                    <p className={`text-[11px] font-extrabold uppercase tracking-wider ${isSel ? 'text-white/80' : 'text-warn'}`}>
                       Occupied
                     </p>
-                    <p className="mt-0.5 text-xs text-cream/55">
+                    <p className={`mt-0.5 text-xs ${isSel ? 'text-white/60' : 'text-muted'}`}>
                       #{active.order_number} · {fmtAgo(active.created_at)}
                     </p>
-                    <p className="text-xs text-cream/55">{pkr(active.total_amount)}</p>
+                    <p className={`text-xs font-bold ${isSel ? 'text-white' : 'text-ink'}`}>{pkr(active.total_amount)}</p>
                   </div>
                 ) : (
-                  <p className="mt-1.5 text-xs font-medium uppercase tracking-wider text-[#8FDCB2]">
+                  <p className={`mt-1.5 text-[11px] font-extrabold uppercase tracking-wider ${isSel ? 'text-white/70' : 'text-ok'}`}>
                     Empty
                   </p>
                 )}
@@ -89,17 +86,16 @@ function WaiterApp() {
           })}
         </div>
 
-        {/* Selected table detail */}
         {selectedTable ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-5">
             <div className="lg:col-span-3">
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl font-bold">
+                <h2 className="font-display text-lg font-extrabold tracking-tight text-ink">
                   New order · Table {selectedTable.table_number}
                 </h2>
                 <button
                   onClick={() => setSelected(null)}
-                  className="text-sm text-cream/55 underline hover:text-saffron"
+                  className="text-[13px] font-semibold text-muted underline hover:text-ink"
                 >
                   Close
                 </button>
@@ -109,78 +105,64 @@ function WaiterApp() {
                   tableId={selectedTable.id}
                   mode="waiter"
                   waiterId={user?.id}
-                  onOrderPlaced={handlePlaced}
-                  dark
+                  onOrderPlaced={(o) => setJustPlaced(o.id)}
                 />
               </div>
             </div>
 
             <div className="lg:col-span-2">
-              <h2 className="font-display text-xl font-bold">Active order</h2>
+              <h2 className="font-display text-lg font-extrabold tracking-tight text-ink">Active order</h2>
               <div className="mt-3">
                 {activeOrder ? (
-                  <div className="rounded-2xl border border-pine-line/40 bg-pine-card p-5 shadow-card">
+                  <Card className="p-5">
                     <div className="flex items-center justify-between">
-                      <p className="font-display text-lg font-bold">
-                        #{activeOrder.order_number}
-                      </p>
+                      <p className="font-display text-lg font-extrabold text-ink">#{activeOrder.order_number}</p>
                       <StatusPill status={activeOrder.status} />
                     </div>
-                    <p className="mt-1 text-sm text-cream/55">
+                    <p className="mt-1 text-[13px] text-muted">
                       {activeOrder.customer_name ? `${activeOrder.customer_name} · ` : ''}
                       {fmtTime(activeOrder.created_at)} · {fmtAgo(activeOrder.created_at)}
                     </p>
                     <div className="mt-3 space-y-1.5">
                       {activeOrder.items.map((it) => (
                         <div key={it.id} className="flex justify-between text-sm">
-                          <span className="text-cream/85">
-                            <span className="font-bold text-saffron">{it.quantity}×</span>{' '}
-                            {it.item_name}
+                          <span className="text-body">
+                            <span className="font-extrabold text-brand">{it.quantity}×</span> {it.item_name}
                           </span>
-                          <span className="text-cream/60">{pkr(it.unit_price * it.quantity)}</span>
+                          <span className="font-semibold text-muted">{pkr(it.unit_price * it.quantity)}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-3 flex items-center justify-between border-t border-pine-line/40 pt-3">
-                      <span className="text-sm text-cream/55">Total</span>
-                      <span className="font-display text-xl font-bold text-saffron">
-                        {pkr(activeOrder.total_amount)}
-                      </span>
+                    <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
+                      <span className="text-sm text-muted">Total</span>
+                      <span className="font-display text-xl font-extrabold text-ink">{pkr(activeOrder.total_amount)}</span>
                     </div>
-                    <button
-                      onClick={completeOrder}
-                      className="mt-4 w-full rounded-xl bg-leaf py-3 text-sm font-bold text-pine-deep transition hover:bg-[#46b57c]"
-                    >
+                    <Btn variant="dark" onClick={completeOrder} className="mt-4 w-full" size="sm">
                       Mark completed & free table
-                    </button>
-                  </div>
+                    </Btn>
+                  </Card>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-cream/15 p-6 text-center text-sm text-cream/45">
-                    No active order on this table. Place one from the menu.
-                  </div>
+                  <Empty title="No active order" sub="Place one from the menu on the left." />
                 )}
               </div>
 
-              <h2 className="mt-6 font-display text-xl font-bold">Today&apos;s history</h2>
+              <h2 className="mt-6 font-display text-lg font-extrabold tracking-tight text-ink">Today&apos;s history</h2>
               <div className="mt-3 space-y-2">
                 {history.length === 0 && (
-                  <p className="text-sm text-cream/45">No orders yet today on this table.</p>
+                  <p className="text-sm text-muted">No orders yet today on this table.</p>
                 )}
                 {history.map((o) => (
-                  <div
-                    key={o.id}
-                    className="flex items-center justify-between rounded-xl border border-pine-line/40 bg-pine-card px-4 py-3"
-                  >
+                  <div key={o.id} className="flex items-center justify-between rounded-[14px] border border-line bg-surface px-4 py-3">
                     <div>
-                      <p className="text-sm font-medium text-cream">
+                      <p className="text-sm font-bold text-ink">
                         #{o.order_number} · {o.items.reduce((s, i) => s + i.quantity, 0)} items
                       </p>
-                      <p className="text-xs text-cream/45">
+                      <p className="text-xs text-muted">
                         {fmtTime(o.created_at)} · {o.customer_name ?? 'Walk-in'}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-saffron">{pkr(o.total_amount)}</span>
+                      <span className="text-sm font-extrabold text-ink">{pkr(o.total_amount)}</span>
                       <StatusPill status={o.status} />
                     </div>
                   </div>
@@ -189,12 +171,10 @@ function WaiterApp() {
             </div>
           </div>
         ) : (
-          <div className="mt-8 rounded-2xl border border-dashed border-cream/15 p-10 text-center">
-            <p className="font-display text-xl text-cream/70">Select a table to take an order</p>
-            <p className="mt-1 text-sm text-cream/45">
-              Occupied tables show their running order — tap one to add items or close it out.
-            </p>
-          </div>
+          <Empty
+            title="Select a table to take an order"
+            sub="Occupied tables show their running order — tap one to add items or close it out."
+          />
         )}
       </main>
     </div>
@@ -203,7 +183,7 @@ function WaiterApp() {
 
 export default function WaiterPage() {
   return (
-    <RequireRole roles={['waiter', 'manager']}>
+    <RequireRole roles={['waiter', 'manager', 'owner']}>
       <WaiterApp />
     </RequireRole>
   );
